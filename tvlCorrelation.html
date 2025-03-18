@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price and TVL Correlation</title>
+    <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Price and TVL Correlation</h1>
+
+        <!-- User Input for Symbol (Price) and Chain (TVL) -->
+        <div class="inputs">
+            <label for="symbol-input"><strong>Symbol (e.g., BTCUSDT):</strong></label>
+            <input type="text" id="symbol-input" placeholder="e.g., BTCUSDT" />
+
+            <label for="chain-input"><strong>Chain (e.g., ethereum):</strong></label>
+            <input type="text" id="chain-input" placeholder="e.g., ethereum" />
+
+            <button id="compare-btn">Compare</button>
+        </div>
+
+        <!-- Results (Correlation) -->
+        <div id="result"></div>
+
+        <!-- Chart Container -->
+        <canvas id="correlationChart"></canvas>
+    </div>
+
+    <!-- Link to external JavaScript file -->
+    <script src="tvlComparason.js"></script>
+
+</body>
+</html>
