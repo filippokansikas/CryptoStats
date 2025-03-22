@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Dashboard</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links li {
+            display: inline;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: #555;
+            border-radius: 5px;
+        }
+
+        /* Main Content */
+        body {
+            margin-top: 70px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* Crypto List */
+        .crypto-list {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .crypto-item {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            transition: background 0.3s;
+        }
+
+        .crypto-item:last-child {
+            border-bottom: none;
+        }
+
+        .crypto-item:hover {
+            background: #f0f0f0;
+        }
+
+        .crypto-volume {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Menu -->
+    <header class="header">
+        <div class="logo">Crypto Dashboard</div>
+        <ul class="nav-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </header>
+
+    <div class="container">
+        <h1>Top 10 Cryptos by Volume (USDT)</h1>
+
+        <!-- Chart Container -->
+        <div class="chart-container">
+            <div id="tradingview-chart" style="width:100%;height:400px;"></div>
+        </div>
+
+        <!-- Crypto List -->
+        <div class="crypto-list" id="crypto-list"></div>
+    </div>
+
+    <script>
+        let currentSymbol = ''; // Stores the currently displayed crypto symbol
+
+        async function fetchTopCryptos() {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                const data = await response.json();
+                
+                // Filter for USDT pairs and sort by quoteVolume (traded value in USDT)
+                const topCryptos = data
+                    .filter(crypto => crypto.symbol.endsWith('USDT'))
+                    .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                    .slice(0, 10);
+
+                const listContainer = document.getElementById('crypto-list');
+                listContainer.innerHTML = ''; // Clear previous list
+
+                topCryptos.forEach((crypto, index) => {
+                    const symbol = crypto.symbol;
+                    const volumeInUSDT = parseFloat(crypto.quoteVolume).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+
+                    const item = document.createElement('div');
+                    item.classList.add('crypto-item');
+                    item.innerHTML = `
+                        ${symbol} 
+                        <div class="crypto-volume">24h Volume: ${volumeInUSDT}</div>
+                    `;
+                    
+                    // Click event to update the chart
+                    item.addEventListener('click', () => loadTradingViewChart(symbol));
+
+                    listContainer.appendChild(item);
+
+                    // Load the first crypto chart initially
+                    if (index === 0) {
+                        loadTradingViewChart(symbol);
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching crypto data:", error);
+                document.getElementById('crypto-list').innerHTML = "<p>Error loading data.</p>";
+            }
+        }
+
+        function loadTradingViewChart(symbol) {
+            if (currentSymbol === symbol) return; // Prevent reloading the same chart
+            currentSymbol = symbol;
+
+            document.getElementById('tradingview-chart').innerHTML = ''; // Clear previous chart
+
+            new TradingView.widget({
+                "width": "100%",
+                "height": 400,
+                "symbol": symbol, // Use USDT ticker symbol here (e.g., BTCUSDT)
+                "interval": "1h",
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": true,
+                "container_id": "tradingview-chart"
+            });
+        }
+
+        // Fetch and display the top 10 cryptos when the page loads
+        fetchTopCryptos();
+    </script>
+<script type="text/javascript" src="chart-script.js"></script>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+</body>
+</html>

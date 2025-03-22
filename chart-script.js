@@ -171,7 +171,6 @@ function displayCorrelationMatrix(matrix) {
 // Initialize
 document.addEventListener("DOMContentLoaded", async () => {
     const primaryTicker = getQueryParameter("symbol") || "BTCUSDT";
-
     new TradingView.widget({
         autosize: true,
         symbol: primaryTicker,

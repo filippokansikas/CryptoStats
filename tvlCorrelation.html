@@ -1,39 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Price and TVL Correlation</title>
-    <!-- Link to external stylesheet -->
-    <link rel="stylesheet" href="styles.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Chain TVL</title>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.8.3/plotly.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #chart {
+            width: 800px;
+            height: 600px;
+        }
+        #input-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #input-container input, #input-container button {
+            margin: 5px;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>Price and TVL Correlation</h1>
-
-        <!-- User Input for Symbol (Price) and Chain (TVL) -->
-        <div class="inputs">
-            <label for="symbol-input"><strong>Symbol (e.g., BTCUSDT):</strong></label>
-            <input type="text" id="symbol-input" placeholder="e.g., BTCUSDT" />
-
-            <label for="chain-input"><strong>Chain (e.g., ethereum):</strong></label>
-            <input type="text" id="chain-input" placeholder="e.g., ethereum" />
-
-            <button id="compare-btn">Compare</button>
-        </div>
-
-        <!-- Results (Correlation) -->
-        <div id="result"></div>
-
-        <!-- Chart Container -->
-        <canvas id="correlationChart"></canvas>
+    <h1>Chain TVL</h1>
+    <div id="input-container">
+        <input type="text" id="chainName" placeholder="Chain Name (e.g., Ethereum)" value="Ethereum">
+        <button onclick="fetchAndPlot()">Plot</button>
     </div>
+    <div id="chart"></div>
+    <div id="error-message"></div>
+    <script>
+        async function getChainTVL(chainName) {
+            // Attempt to normalize chain name
+            let normalizedChainName = chainName.toLowerCase().replace(/\s+/g, '-');
+            let url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
+            let response = await fetch(url);
 
-    <!-- Link to external JavaScript file -->
-    <script src="tvlComparason.js"></script>
+            if (!response.ok) {
+                // Try other variations of the chain name
+                normalizedChainName = chainName.toLowerCase();
+                url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
+                response = await fetch(url);
+            }
 
+            if (!response.ok) {
+                // Try removing the 'chain' or 'network' word
+                normalizedChainName = chainName.toLowerCase().replace(/chain|network/g, '').trim().replace(/\s+/g, '-');
+                url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
+                response = await fetch(url);
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.tvl && Array.isArray(data.tvl)) {
+                    return data.tvl.map(item => ({
+                        date: new Date(item.date * 1000),
+                        tvl: item.tvl
+                    }));
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+
+        async function fetchAndPlot() {
+            const chainName = document.getElementById("chainName").value;
+            const errorMessageDiv = document.getElementById("error-message");
+            errorMessageDiv.textContent = "";
+
+            const tvlData = await getChainTVL(chainName);
+
+            if (!tvlData) {
+                errorMessageDiv.textContent = "Error: Invalid Chain Name or API error.";
+                return;
+            }
+
+            const traceTVL = {
+                x: tvlData.map(item => item.date),
+                y: tvlData.map(item => item.tvl),
+                type: 'scatter',
+                name: 'TVL'
+            };
+
+            const layout = {
+                title: `${chainName} TVL`,
+                yaxis: { title: 'TVL (USD)' },
+                xaxis: { rangeslider: { visible: true } }
+            };
+
+            Plotly.newPlot('chart', [traceTVL], layout);
+        }
+
+        fetchAndPlot();
+    </script>
 </body>
 </html>
