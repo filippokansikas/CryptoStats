@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chain TVL</title>
+    <title>Chain TVL vs Price (Binance API)</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.8.3/plotly.min.js"></script>
     <style>
         body {
@@ -11,7 +12,7 @@
             align-items: center;
         }
         #chart {
-            width: 800px;
+            width: 1000px;
             height: 600px;
         }
         #input-container {
@@ -25,81 +26,23 @@
             color: red;
             margin-top: 10px;
         }
+        #correlation {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Chain TVL</h1>
+    <h1>Chain TVL vs Price (Binance API)</h1>
     <div id="input-container">
         <input type="text" id="chainName" placeholder="Chain Name (e.g., Ethereum)" value="Ethereum">
-        <button onclick="fetchAndPlot()">Plot</button>
+        <input type="text" id="symbol" placeholder="Trading Pair (e.g., ETHUSDT)" value="ETHUSDT">
+        <button id="plotButton">Plot</button>
     </div>
     <div id="chart"></div>
+    <div id="correlation"></div>
     <div id="error-message"></div>
-    <script>
-        async function getChainTVL(chainName) {
-            // Attempt to normalize chain name
-            let normalizedChainName = chainName.toLowerCase().replace(/\s+/g, '-');
-            let url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
-            let response = await fetch(url);
+<script src="script.js"></script>
 
-            if (!response.ok) {
-                // Try other variations of the chain name
-                normalizedChainName = chainName.toLowerCase();
-                url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
-                response = await fetch(url);
-            }
-
-            if (!response.ok) {
-                // Try removing the 'chain' or 'network' word
-                normalizedChainName = chainName.toLowerCase().replace(/chain|network/g, '').trim().replace(/\s+/g, '-');
-                url = `https://api.llama.fi/v2/historicalChainTvl/${normalizedChainName}`;
-                response = await fetch(url);
-            }
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.tvl && Array.isArray(data.tvl)) {
-                    return data.tvl.map(item => ({
-                        date: new Date(item.date * 1000),
-                        tvl: item.tvl
-                    }));
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        }
-
-        async function fetchAndPlot() {
-            const chainName = document.getElementById("chainName").value;
-            const errorMessageDiv = document.getElementById("error-message");
-            errorMessageDiv.textContent = "";
-
-            const tvlData = await getChainTVL(chainName);
-
-            if (!tvlData) {
-                errorMessageDiv.textContent = "Error: Invalid Chain Name or API error.";
-                return;
-            }
-
-            const traceTVL = {
-                x: tvlData.map(item => item.date),
-                y: tvlData.map(item => item.tvl),
-                type: 'scatter',
-                name: 'TVL'
-            };
-
-            const layout = {
-                title: `${chainName} TVL`,
-                yaxis: { title: 'TVL (USD)' },
-                xaxis: { rangeslider: { visible: true } }
-            };
-
-            Plotly.newPlot('chart', [traceTVL], layout);
-        }
-
-        fetchAndPlot();
-    </script>
 </body>
 </html>
