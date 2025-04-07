@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto Seasonality Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+    label, input, button {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      display: block;
+    }
+    input {
+      padding: 0.5rem;
+      width: 220px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    caption {
+      caption-side: top;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .error-message {
+      color: red;
+      font-weight: bold;
+      padding: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Crypto Seasonality Analyzer</h1>
+
+  <label for="ticker-input">Enter Ticker Symbol (e.g. BTCUSDT):</label>
+  <input type="text" id="ticker-input" placeholder="e.g. ETHUSDT" value="BTCUSDT" />
+  <button id="analyze-btn">Analyze</button>
+
+  <table id="seasonality-table">
+    <caption>Average Daily Returns by Month</caption>
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Avg Daily Return (%)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    class BinanceAPI {
+      constructor(baseURL = 'https://api.binance.com/api/v3') {
+        this.baseURL = baseURL;
+      }
+
+      async getKlines(symbol, interval, startTime, endTime, limit = 1000) {
+        const url = `${this.baseURL}/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}&limit=${limit}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("Invalid ticker symbol or API issue.");
+        return data.map(k => ({
+          date: new Date(k[0]),
+          open: parseFloat(k[1]),
+          high: parseFloat(k[2]),
+          low: parseFloat(k[3]),
+          close: parseFloat(k[4])
+        }));
+      }
+    }
+
+    class SeasonalityAnalyzer {
+      constructor(api, symbol) {
+        this.api = api;
+        this.symbol = symbol;
+        this.data = [];
+      }
+
+      async fetchHistoricalData(startDate = '2020-01-01') {
+        this.data = [];
+        let startTime = new Date(startDate).getTime();
+        const now = Date.now();
+
+        while (startTime < now) {
+          const endTime = startTime + 1000 * 60 * 60 * 24 * 100; // ~100 days
+          const chunk = await this.api.getKlines(this.symbol, '1d', startTime, endTime);
+          if (chunk.length === 0) break;
+          this.data = this.data.concat(chunk);
+          startTime = new Date(chunk[chunk.length - 1].date).getTime() + 24 * 60 * 60 * 1000;
+          await new Promise(resolve => setTimeout(resolve, 500)); // avoid rate limit
+        }
+      }
+
+      calculateAverageReturnsByMonth() {
+        const returnsByMonth = {};
+
+        this.data.forEach((day, i) => {
+          if (i === 0) return;
+          const prevDay = this.data[i - 1];
+          const dailyReturn = ((day.close - prevDay.close) / prevDay.close) * 100;
+          const month = day.date.getMonth();
+
+          if (!returnsByMonth[month]) returnsByMonth[month] = [];
+          returnsByMonth[month].push(dailyReturn);
+        });
+
+        return Array.from({ length: 12 }, (_, month) => {
+          const returns = returnsByMonth[month] || [];
+          const avg = returns.length
+            ? returns.reduce((sum, r) => sum + r, 0) / returns.length
+            : 0;
+          return { month, average: avg };
+        });
+      }
+    }
+
+    class TableRenderer {
+      constructor(tableId) {
+        this.tableBody = document.querySelector(`#${tableId} tbody`);
+      }
+
+      render(data) {
+        this.tableBody.innerHTML = '';
+
+        const allZero = data.every(item => item.average === 0);
+        if (allZero) {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td colspan="2" class="error-message">Not enough historical price data to calculate seasonality.</td>`;
+          row.querySelector("td").style.textAlign = "center";
+          this.tableBody.appendChild(row);
+          return;
+        }
+
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          const monthName = new Date(2000, item.month).toLocaleString('default', { month: 'long' });
+
+          row.innerHTML = `
+            <td>${monthName}</td>
+            <td>${item.average.toFixed(2)}%</td>
+          `;
+          this.tableBody.appendChild(row);
+        });
+      }
+    }
+
+    async function runAnalysis() {
+      const symbol = document.getElementById('ticker-input').value.toUpperCase().trim();
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const api = new BinanceAPI();
+      const renderer = new TableRenderer('seasonality-table');
+
+      analyzeBtn.textContent = 'Analyzing...';
+      analyzeBtn.disabled = true;
+
+      try {
+        const analyzer = new SeasonalityAnalyzer(api, symbol);
+        await analyzer.fetchHistoricalData();
+        const seasonality = analyzer.calculateAverageReturnsByMonth();
+        renderer.render(seasonality);
+      } catch (err) {
+        renderer.tableBody.innerHTML = `<tr><td colspan="2" class="error-message" style="text-align:center;">Error: ${err.message}</td></tr>`;
+      } finally {
+        analyzeBtn.textContent = 'Analyze';
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('analyze-btn').addEventListener('click', runAnalysis);
+  </script>
+
+</body>
+</html>

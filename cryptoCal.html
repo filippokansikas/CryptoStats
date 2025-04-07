@@ -18,34 +18,19 @@
 
     <script>
         async function fetchCryptoEvents() {
-            const apiUrl = 'https://developers.coinmarketcal.com/v1/events?max=10&coins=bitcoin';
-            const API_KEY = 'tqgkGSmnoz8bLVh5yTikE7FSAyJ5pDwx3eiMuzYU'; // Replace with your actual API key
-            
+            const apiUrl = 'http://localhost:3000/api/events'; // Fetch from backend server
+
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'x-api-key': `${API_KEY}`,
-                        'Accept-Encoding':'deflate, gzip'
-                    }
-                
-                });
-                console.log(response);
-                
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
                 const data = await response.json();
-                
-                // Handle potential API errors
-                if (data.error) {
-                    throw new Error(data.error.message || 'API error');
-                }
-                
-                displayEvents(data);
+                console.log('API Response:', data);
+
+                const events = data.events || []; // Adjust based on actual API response structure
+                displayEvents(events);
             } catch (error) {
-                const calendar = document.getElementById('calendar');
-                calendar.innerHTML = `<p class="error">Failed to load events: ${error.message}</p>`;
+                document.getElementById('calendar').innerHTML = `<p class="error">Failed to load events: ${error.message}</p>`;
                 console.error('Error fetching events:', error);
             }
         }
@@ -53,21 +38,21 @@
         function displayEvents(events) {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
-            
-            if (!events || !Array.isArray(events) || events.length === 0) {
+
+            if (!events.length) {
                 calendar.innerHTML = '<p>No events found.</p>';
                 return;
             }
-            
+
             events.forEach(event => {
                 const eventDiv = document.createElement('div');
                 eventDiv.classList.add('event');
-                
-                // Safely handle potentially missing properties
+
+                // Handle missing data gracefully
                 const title = event.title || 'Untitled Event';
                 const date = event.date_event ? new Date(event.date_event).toLocaleDateString() : 'Date not specified';
                 const source = event.source ? `<a href="${event.source}" target="_blank">More info</a>` : '';
-                
+
                 eventDiv.innerHTML = `
                     <h3>${title}</h3>
                     <p>Date: ${date}</p>
@@ -77,7 +62,7 @@
             });
         }
 
-        // Fetch events when page loads
+        // Fetch events when the page loads
         document.addEventListener('DOMContentLoaded', fetchCryptoEvents);
     </script>
 </body>
