@@ -13,13 +13,13 @@
       margin: 0.5rem 0;
       display: block;
     }
-    input {
+    input[type="text"], input[type="date"] {
       padding: 0.5rem;
       width: 220px;
     }
     button {
       padding: 0.5rem 1rem;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
     }
     table {
       border-collapse: collapse;
@@ -54,6 +54,13 @@
 
   <label for="ticker-input">Enter Ticker Symbol (e.g. BTCUSDT):</label>
   <input type="text" id="ticker-input" placeholder="e.g. ETHUSDT" value="BTCUSDT" />
+
+  <label for="start-date">Start Date:</label>
+  <input type="date" id="start-date" value="2020-01-01" />
+
+  <label for="end-date">End Date:</label>
+  <input type="date" id="end-date" />
+
   <button id="analyze-btn">Analyze</button>
 
   <table id="seasonality-table">
@@ -95,18 +102,18 @@
         this.data = [];
       }
 
-      async fetchHistoricalData(startDate = '2020-01-01') {
+      async fetchHistoricalData(startDate, endDate) {
         this.data = [];
         let startTime = new Date(startDate).getTime();
-        const now = Date.now();
+        const endTimestamp = new Date(endDate).getTime();
 
-        while (startTime < now) {
-          const endTime = startTime + 1000 * 60 * 60 * 24 * 100; // ~100 days
-          const chunk = await this.api.getKlines(this.symbol, '1d', startTime, endTime);
+        while (startTime < endTimestamp) {
+          const chunkEnd = Math.min(startTime + 1000 * 60 * 60 * 24 * 100, endTimestamp);
+          const chunk = await this.api.getKlines(this.symbol, '1d', startTime, chunkEnd);
           if (chunk.length === 0) break;
           this.data = this.data.concat(chunk);
           startTime = new Date(chunk[chunk.length - 1].date).getTime() + 24 * 60 * 60 * 1000;
-          await new Promise(resolve => setTimeout(resolve, 500)); // avoid rate limit
+          await new Promise(resolve => setTimeout(resolve, 500)); // rate limit buffer
         }
       }
 
@@ -165,16 +172,23 @@
 
     async function runAnalysis() {
       const symbol = document.getElementById('ticker-input').value.toUpperCase().trim();
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
       const analyzeBtn = document.getElementById('analyze-btn');
       const api = new BinanceAPI();
       const renderer = new TableRenderer('seasonality-table');
+
+      if (!startDate || !endDate) {
+        alert("Please select both a start and end date.");
+        return;
+      }
 
       analyzeBtn.textContent = 'Analyzing...';
       analyzeBtn.disabled = true;
 
       try {
         const analyzer = new SeasonalityAnalyzer(api, symbol);
-        await analyzer.fetchHistoricalData();
+        await analyzer.fetchHistoricalData(startDate, endDate);
         const seasonality = analyzer.calculateAverageReturnsByMonth();
         renderer.render(seasonality);
       } catch (err) {
@@ -186,6 +200,9 @@
     }
 
     document.getElementById('analyze-btn').addEventListener('click', runAnalysis);
+
+    // Default end date to today
+    document.getElementById('end-date').valueAsDate = new Date();
   </script>
 
 </body>
