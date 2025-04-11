@@ -10,22 +10,6 @@ body {
     flex-direction: column;
     min-height: 100vh;
     background-color: #f5f5f5;
-}
-
-/* Fixed Header at Top */
-/* Fixed Header at Top */
-/* Base Styles */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: #f5f5f5;
     padding-top: 70px; /* Push all content below the fixed navbar */
 }
 
@@ -40,25 +24,15 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
-    z-index: 1000; /* Set fixed height */
+    z-index: 1000;
+    height: 70px; /* Fixed height for header */
 }
-
-/* Container for Content */
-.container {
-    width: 100%;
-    max-width: 800px;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
 
 /* Logo */
 .header .logo {
     font-size: 20px;
     font-weight: bold;
+    margin-right: 50px;
 }
 
 /* Navigation */
@@ -83,6 +57,24 @@ body {
 .nav-links a:hover {
     background-color: #555;
     border-radius: 5px;
+}
+
+/* Hamburger Menu */
+.hamburger {
+    display: none;
+    cursor: pointer;
+    padding: 5px;
+    position: absolute;
+    right: 20px;
+}
+
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: 0.3s;
 }
 
 /* Container for Content */
@@ -148,42 +140,115 @@ button:hover {
     overflow-x: auto;
 }
 
+/* Table Styles */
+#cryptoTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 40px; /* Increased from 20px to 40px */
+    overflow-x: auto;
+}
+
+#cryptoTable th, #cryptoTable td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#cryptoTable th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+#cryptoTable tr:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+
+/* Make symbol and price columns sticky */
+#cryptoTable th:first-child,
+#cryptoTable td:first-child,
+#cryptoTable th:nth-child(2),
+#cryptoTable td:nth-child(2) {
+    position: sticky;
+    background-color: #f8f9fa;
+    z-index: 1;
+}
+
+/* Position the sticky columns */
+#cryptoTable th:first-child,
+#cryptoTable td:first-child {
+    left: 0;
+}
+
+#cryptoTable th:nth-child(2),
+#cryptoTable td:nth-child(2) {
+    left: 100px; /* Adjust based on symbol column width */
+}
+
+/* Hover effects for sticky columns */
+#cryptoTable tr:hover td:first-child,
+#cryptoTable tr:hover td:nth-child(2) {
+    background-color: #f5f5f5;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header {
         flex-direction: column;
         text-align: center;
         padding: 10px;
+        height: auto; /* Allow header to expand */
+        min-height: 70px; /* Minimum height */
+    }
+
+    .hamburger {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 20px;
     }
 
     .nav-links {
-        display: none; /* Hide nav by default */
-        flex-direction: column;
-        width: 100%;
-        background-color: #444;
-        position: absolute;
-        top: 50px;
+        position: fixed;
+        top: 70px; /* Position below the header */
         left: 0;
-        padding: 10px 0;
+        width: 100%;
+        background-color: #333;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        transition: 0.3s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 999;
+    }
+
+    .nav-links.active {
+        display: flex;
     }
 
     .nav-links li {
-        display: block;
         margin: 10px 0;
+        width: 100%;
     }
 
     .nav-links a {
         display: block;
-        padding: 10px;
+        width: 100%;
+        padding: 10px 20px;
+        text-align: center;
     }
 
-    .nav-toggle {
-        display: block;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 24px;
-        cursor: pointer;
+    .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
     }
 
     .container {
@@ -195,11 +260,28 @@ button:hover {
     button {
         width: 100%;
     }
+
+    /* Hide volume, RSI, and BB Width columns on mobile */
+    #cryptoTable th:nth-child(3),
+    #cryptoTable td:nth-child(3),
+    #cryptoTable th:nth-child(5),
+    #cryptoTable td:nth-child(5),
+    #cryptoTable th:nth-child(6),
+    #cryptoTable td:nth-child(6) {
+        display: none;
+    }
+
+    /* Adjust sticky column positions for mobile */
+    #cryptoTable th:nth-child(2),
+    #cryptoTable td:nth-child(2) {
+        left: 80px; /* Adjust based on symbol column width for mobile */
+    }
 }
 
 @media (max-width: 480px) {
     .header .logo {
         font-size: 18px;
+        margin-right: 45px;
     }
 
     .container {
@@ -211,5 +293,11 @@ button:hover {
     button {
         font-size: 14px;
         padding: 8px;
+    }
+
+    /* Adjust sticky column positions for very small screens */
+    #cryptoTable th:nth-child(2),
+    #cryptoTable td:nth-child(2) {
+        left: 70px; /* Further adjust for very small screens */
     }
 }

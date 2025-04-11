@@ -1,3 +1,5 @@
+import { fetchHistoricalData, calculateLogReturns, calculateCorrelation, displayCorrelationMatrix, getQueryParameter, initializeTradingView } from './utils.js';
+
 // Get the symbol from the URL
 function getQueryParameter(param) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -19,12 +21,6 @@ async function fetchHistoricalData(symbol, interval = "1h", limit = 500) {
         console.error(`Error fetching ${symbol}:`, error.message);
         return [];
     }
-}
-
-// Calculate log returns
-function calculateLogReturns(prices) {
-    if (prices.length < 2) return [];
-    return prices.slice(1).map((price, i) => Math.log(price / prices[i]));
 }
 
 // Calculate Pearson correlation
@@ -101,13 +97,9 @@ async function compareTokens() {
     // Calculate correlation
     const correlation = calculateCorrelation(primaryLogReturns, userLogReturns);
 
-    // Check cointegration
-    const isCointegrated = checkCointegration(primaryLogReturns, userLogReturns);
-
     // Display results
     comparisonResults.innerHTML = `
         <p><strong>Correlation:</strong> ${correlation !== null ? correlation.toFixed(2) : "N/A"}</p>
-        <p><strong>Cointegration:</strong> ${isCointegrated ? "Yes" : "No"}</p>
     `;
 }
 
@@ -141,50 +133,13 @@ async function generateCorrelationMatrix(primaryTicker) {
         });
     });
 
-    displayCorrelationMatrix(matrix);
-}
-
-// Display correlation matrix in HTML
-function displayCorrelationMatrix(matrix) {
-    const tickers = Object.keys(matrix);
-    const container = document.getElementById("correlation-matrix");
-    let html = `<h2>Correlation Matrix</h2><table border="1"><tr><th></th>`;
-
-    tickers.forEach(ticker => {
-        html += `<th>${ticker}</th>`;
-    });
-    html += `</tr>`;
-
-    tickers.forEach(ticker => {
-        html += `<tr><td><strong>${ticker}</strong></td>`;
-        tickers.forEach(t2 => {
-            const correlation = matrix[ticker][t2].toFixed(2);
-            html += `<td>${correlation}</td>`;
-        });
-        html += `</tr>`;
-    });
-
-    html += `</table>`;
-    container.innerHTML = html;
+    displayCorrelationMatrix(matrix, "correlation-matrix");
 }
 
 // Initialize
 document.addEventListener("DOMContentLoaded", async () => {
     const primaryTicker = getQueryParameter("symbol") || "BTCUSDT";
-    new TradingView.widget({
-        autosize: true,
-        symbol: primaryTicker,
-        interval: "1",
-        timezone: "Etc/UTC",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-        toolbar_bg: "#f1f3f6",
-        enable_publishing: false,
-        allow_symbol_change: true,
-        container_id: "tradingview-widget-container",
-    });
-
+    initializeTradingView(primaryTicker);
     await generateCorrelationMatrix(primaryTicker);
 });
 

@@ -9,6 +9,11 @@
 <body>
     <header class="header">
         <div class="logo">Trading Dashboard</div>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
@@ -25,7 +30,24 @@
     <div id="chart"></div>
     <div id="correlation"></div>
     <div id="error-message"></div>
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Hamburger menu functionality
+        const hamburger = document.querySelector('.hamburger');
+        const nav = document.querySelector('.nav-links');
 
+        hamburger.addEventListener('click', () => {
+            nav.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+
+        // Close menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                nav.classList.remove('active');
+                hamburger.classList.remove('active');
+            });
+        });
+    </script>
 </body>
 </html>

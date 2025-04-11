@@ -1,4 +1,75 @@
 const BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/24hr";
+const RSI_PERIOD = 14;
+const BB_PERIOD = 20;
+const BB_STD_DEV = 2;
+
+// Function to calculate RSI
+async function calculateRSI(symbol) {
+    try {
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=${RSI_PERIOD + 1}`);
+        if (!response.ok) throw new Error("Failed to fetch RSI data");
+        
+        const data = await response.json();
+        const closes = data.map(item => parseFloat(item[4])); // Closing prices
+        
+        let gains = 0;
+        let losses = 0;
+        
+        // Calculate initial average gain and loss
+        for (let i = 1; i < RSI_PERIOD + 1; i++) {
+            const change = closes[i] - closes[i - 1];
+            if (change >= 0) {
+                gains += change;
+            } else {
+                losses += Math.abs(change);
+            }
+        }
+        
+        let avgGain = gains / RSI_PERIOD;
+        let avgLoss = losses / RSI_PERIOD;
+        
+        // Calculate RSI
+        const rs = avgGain / avgLoss;
+        const rsi = 100 - (100 / (1 + rs));
+        
+        return rsi.toFixed(2);
+    } catch (error) {
+        console.error(`Error calculating RSI for ${symbol}:`, error);
+        return "N/A";
+    }
+}
+
+// Function to calculate Bollinger Bands Width
+async function calculateBBWidth(symbol) {
+    try {
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=${BB_PERIOD}`);
+        if (!response.ok) throw new Error("Failed to fetch BB data");
+        
+        const data = await response.json();
+        const closes = data.map(item => parseFloat(item[4])); // Closing prices
+        
+        // Calculate Simple Moving Average (SMA)
+        const sum = closes.reduce((a, b) => a + b, 0);
+        const sma = sum / BB_PERIOD;
+        
+        // Calculate Standard Deviation
+        const squaredDifferences = closes.map(price => Math.pow(price - sma, 2));
+        const variance = squaredDifferences.reduce((a, b) => a + b, 0) / BB_PERIOD;
+        const stdDev = Math.sqrt(variance);
+        
+        // Calculate Bollinger Bands
+        const upperBand = sma + (BB_STD_DEV * stdDev);
+        const lowerBand = sma - (BB_STD_DEV * stdDev);
+        
+        // Calculate Band Width
+        const bandWidth = ((upperBand - lowerBand) / sma) * 100;
+        
+        return bandWidth.toFixed(2);
+    } catch (error) {
+        console.error(`Error calculating BB Width for ${symbol}:`, error);
+        return "N/A";
+    }
+}
 
 // Fetch top 100 cryptocurrencies by trading volume
 async function fetchTopCryptos() {
@@ -14,16 +85,40 @@ async function fetchTopCryptos() {
             .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume)) // Sort by volume
             .slice(0, 100); // Take the top 100
 
-        return sortedData.map(item => ({
-            symbol: item.symbol, // Use the full symbol (e.g., BTCUSDT)
-            price: parseFloat(item.lastPrice).toFixed(5),
-            volume: parseFloat(item.quoteVolume).toFixed(0),
-            change_24h: parseFloat(item.priceChangePercent).toFixed(2)
+        // Calculate RSI and BB Width for each cryptocurrency
+        const cryptoData = await Promise.all(sortedData.map(async item => {
+            const [rsi, bbWidth] = await Promise.all([
+                calculateRSI(item.symbol),
+                calculateBBWidth(item.symbol)
+            ]);
+            
+            return {
+                symbol: item.symbol,
+                price: parseFloat(item.lastPrice).toFixed(5),
+                volume: parseFloat(item.quoteVolume).toFixed(0),
+                change_24h: parseFloat(item.priceChangePercent).toFixed(2),
+                rsi: rsi,
+                bbWidth: bbWidth
+            };
         }));
+
+        return cryptoData;
     } catch (error) {
         console.error("Error fetching cryptocurrency data:", error);
         return [];
     }
+}
+
+// Function to format volume with k notation
+function formatVolume(volume) {
+    if (volume >= 1000000000) {
+        return (volume / 1000000000).toFixed(2) + 'B';
+    } else if (volume >= 1000000) {
+        return (volume / 1000000).toFixed(2) + 'M';
+    } else if (volume >= 1000) {
+        return (volume / 1000).toFixed(2) + 'K';
+    }
+    return volume.toFixed(2);
 }
 
 // Populate the table with data
@@ -35,31 +130,60 @@ async function populateTable() {
     cryptoData.forEach(item => {
         const row = `
             <tr onclick="openChart('${item.symbol}')">
-                <td>${item.symbol}</td> <!-- Show the full symbol (e.g., BTCUSDT) -->
+                <td>${item.symbol}</td>
                 <td>$${item.price}</td>
-                <td>$${item.volume}</td>
+                <td>$${formatVolume(item.volume)}</td>
                 <td>${item.change_24h}%</td>
+                <td>${item.rsi}</td>
+                <td>${item.bbWidth}%</td>
             </tr>
         `;
         tableBody.insertAdjacentHTML("beforeend", row);
     });
 
+    // Destroy existing DataTable instance if it exists
+    if ($.fn.DataTable.isDataTable('#cryptoTable')) {
+        $('#cryptoTable').DataTable().destroy();
+    }
+
     // Initialize DataTables for sorting and pagination
     $('#cryptoTable').DataTable({
-        order: [[2, 'desc']] // Order by the third column (volume) in descending order
+        order: [[2, 'desc']], // Order by the third column (volume) in descending order
+        pageLength: 25, // Show 25 rows per page
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]] // Page length options
     });
 }
 
 // Redirect to the chart page
 function openChart(symbol) {
-    window.location.href = `chart.html?symbol=${symbol}`; // Pass the full symbol (e.g., BTCUSDT)
+    window.location.href = `chart.html?symbol=${symbol}`;
 }
 
-// Refresh data every 5 minutes
-setInterval(populateTable, 5 * 60 * 1000);
+// Initialize DataTables and set up refresh interval
+let refreshInterval;
 
-// Initial load
-populateTable();
+function initializeTable() {
+    // Clear any existing interval
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+
+    // Initial data load
+    populateTable();
+
+    // Set up refresh interval (30 seconds)
+    refreshInterval = setInterval(populateTable, 30000);
+}
+
+// Call initializeTable when the page loads
+document.addEventListener('DOMContentLoaded', initializeTable);
+
+// Clean up interval when page is unloaded
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
 
 $(document).ready(function () {
     // Function to fetch historical TVL data for a specific chain
@@ -415,3 +539,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Attach event listener to the compare button
 document.getElementById("compare-pairs-btn").addEventListener("click", compareTokens);
 
+function toggleMenu() {
+    const navLinks = document.querySelector('.nav-links');
+    navLinks.classList.toggle('active');
+    
+    // Optional: Toggle hamburger animation
+    const hamburger = document.querySelector('.hamburger');
+    hamburger.classList.toggle('active');
+}

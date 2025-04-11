@@ -11,12 +11,45 @@
         .event { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); width: 300px; }
         .error { color: red; text-align: center; }
     </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header class="header">
+        <div class="logo">Trading Dashboard</div>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
+            <li><a href="volume-analysis.html">Volume Analysis</a></li>
+            <li><a href="seasonality.html">Seasonality</a></li>
+        </ul>
+    </header>
+
     <h1>Crypto Events Calendar</h1>
     <div id="calendar">Loading events...</div>
 
     <script>
+        // Hamburger menu functionality
+        const hamburger = document.querySelector('.hamburger');
+        const nav = document.querySelector('.nav-links');
+
+        hamburger.addEventListener('click', () => {
+            nav.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+
+        // Close menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                nav.classList.remove('active');
+                hamburger.classList.remove('active');
+            });
+        });
+
         async function fetchCryptoEvents() {
             const apiUrl = 'http://localhost:3000/api/events'; // Fetch from backend server
 

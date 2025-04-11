@@ -1,3 +1,5 @@
+import { fetchHistoricalData, calculateLogReturns, calculateCorrelation, displayCorrelationMatrix } from './utils.js';
+
 async function fetchMultiplePairs(pairs, interval = "1h", limit = 100) {
     let dataMap = {};
 
@@ -29,7 +31,9 @@ function computeCorrelationMatrix(priceData) {
                 matrix[pairA][pairB] = 1; // Self-correlation is always 1
             } else {
                 const trimmedB = priceData[pairB].slice(-minLength);
-                matrix[pairA][pairB] = ss.sampleCorrelation(trimmedA, trimmedB).toFixed(2);
+                const logReturnsA = calculateLogReturns(trimmedA);
+                const logReturnsB = calculateLogReturns(trimmedB);
+                matrix[pairA][pairB] = calculateCorrelation(logReturnsA, logReturnsB) || 0;
             }
         });
     });
@@ -37,28 +41,9 @@ function computeCorrelationMatrix(priceData) {
     return matrix;
 }
 
-function displayCorrelationMatrix(matrix) {
-    const pairs = Object.keys(matrix);
-    let tableHTML = "<table border='1'><tr><th>Pair</th>";
-
-    pairs.forEach(pair => (tableHTML += `<th>${pair}</th>`));
-    tableHTML += "</tr>";
-
-    pairs.forEach(pairA => {
-        tableHTML += `<tr><td><strong>${pairA}</strong></td>`;
-        pairs.forEach(pairB => {
-            tableHTML += `<td>${matrix[pairA][pairB]}</td>`;
-        });
-        tableHTML += "</tr>";
-    });
-
-    tableHTML += "</table>";
-    document.getElementById("correlation-matrix").innerHTML = tableHTML;
-}
-
 // Initialize Correlation Analysis
 async function initCorrelationAnalysis() {
-    const tradingPairs = ["XRPUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT"]; // Add desired pairs
+    const tradingPairs = ["XRPUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT"];
 
     const priceData = await fetchMultiplePairs(tradingPairs, "1h", 1000);
     if (Object.keys(priceData).length < 2) {
@@ -67,7 +52,7 @@ async function initCorrelationAnalysis() {
     }
 
     const correlationMatrix = computeCorrelationMatrix(priceData);
-    displayCorrelationMatrix(correlationMatrix);
+    displayCorrelationMatrix(correlationMatrix, "correlation-matrix");
 }
 
 // Run the correlation analysis when the page loads
