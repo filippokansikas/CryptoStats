@@ -21,6 +21,8 @@
             <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
             <li><a href="volume-analysis.html">Volume Analysis</a></li>
             <li><a href="seasonality.html">Seasonality</a></li>
+            <li><a href="pivot-points.html">Pivot Points</a></li>
+            <li><a href="rsi-divergence.html">RSI Divergence</a></li>
         </ul>
     </header>
 
@@ -47,9 +49,6 @@
 
         <!-- Correlation Matrix -->
         <div id="correlation-matrix"></div>
-
-        <!-- TradingView Widget -->
-       
     </div>
 
     <!-- TradingView Widget JS -->
@@ -74,6 +73,46 @@
                 nav.classList.remove('active');
                 hamburger.classList.remove('active');
             });
+        });
+
+        // Initialize TradingView Widget
+        function initializeTradingView(symbol = 'BTCUSDT') {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": "1",
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview-widget-container",
+                "height": 600,
+                "hide_side_toolbar": false,
+                "save_image": false,
+                "studies": [
+                    "RSI@tv-basicstudies",
+                    "BB@tv-basicstudies"
+                ],
+                "show_popup_button": true,
+                "popup_width": "1000",
+                "popup_height": "650"
+            });
+        }
+
+        // Get symbol from URL parameter or use default
+        function getSymbolFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('symbol') || 'BTCUSDT';
+        }
+
+        // Initialize chart when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const symbol = getSymbolFromUrl();
+            document.getElementById('chart-title').textContent = `${symbol} Chart`;
+            initializeTradingView(symbol);
         });
     </script>
 

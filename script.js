@@ -81,9 +81,9 @@ async function fetchTopCryptos() {
 
         // Filter only USDT pairs and sort by trading volume (descending)
         const sortedData = data
-            .filter(item => item.symbol.endsWith("USDT")) // Filter only USDT pairs
-            .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume)) // Sort by volume
-            .slice(0, 100); // Take the top 100
+            .filter(item => item.symbol.endsWith("USDT"))
+            .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+            .slice(0, 100);
 
         // Calculate RSI and BB Width for each cryptocurrency
         const cryptoData = await Promise.all(sortedData.map(async item => {
@@ -95,7 +95,7 @@ async function fetchTopCryptos() {
             return {
                 symbol: item.symbol,
                 price: parseFloat(item.lastPrice).toFixed(5),
-                volume: parseFloat(item.quoteVolume).toFixed(0),
+                volume: parseFloat(item.quoteVolume),
                 change_24h: parseFloat(item.priceChangePercent).toFixed(2),
                 rsi: rsi,
                 bbWidth: bbWidth
@@ -132,7 +132,7 @@ async function populateTable() {
             <tr onclick="openChart('${item.symbol}')">
                 <td>${item.symbol}</td>
                 <td>$${item.price}</td>
-                <td>$${formatVolume(item.volume)}</td>
+                <td data-sort="${item.volume}">$${formatVolume(item.volume)}</td>
                 <td>${item.change_24h}%</td>
                 <td>${item.rsi}</td>
                 <td>${item.bbWidth}%</td>
@@ -146,11 +146,23 @@ async function populateTable() {
         $('#cryptoTable').DataTable().destroy();
     }
 
-    // Initialize DataTables for sorting and pagination
+    // Initialize DataTables with volume as the default sort column
     $('#cryptoTable').DataTable({
-        order: [[2, 'desc']], // Order by the third column (volume) in descending order
-        pageLength: 25, // Show 25 rows per page
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]] // Page length options
+        order: [[2, 'desc']], // Sort by volume (column index 2) in descending order
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        columnDefs: [
+            {
+                targets: 2, // Volume column
+                type: 'num', // Specify that this column contains numeric data
+                render: function(data, type, row) {
+                    if (type === 'sort') {
+                        return data; // Use the data-sort attribute for sorting
+                    }
+                    return row[2]; // Use the formatted value for display
+                }
+            }
+        ]
     });
 }
 
