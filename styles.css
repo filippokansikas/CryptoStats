@@ -79,11 +79,14 @@ body {
     background-color: #555;
     border-radius: 5px;
 }
-
+.logo{
+  margin-left: 20px;
+}
 /* Hamburger Menu */
 .hamburger {
     display: block;
     cursor: pointer;
+    margin-right: 20px; /* Reduced from 30px */
     padding: 3px; /* Reduced from 5px */
     position: absolute;
     right: 15px; /* Reduced from 20px */
@@ -227,18 +230,19 @@ button:hover {
 /* Responsive Design */
 @media (max-width: 768px) {
     .header {
-        flex-direction: column;
+        display: flex;
+        justify-content: space-between;
         text-align: center;
         padding: 10px;
         height: auto;
-        min-height: 70px;
+        min-height: 30px;
     }
 
     .hamburger {
         display: block;
         position: absolute;
         right: 20px;
-        top: 20px;
+       
     }
 
     .nav-links {
@@ -325,6 +329,9 @@ button:hover {
     .container {
         width: 95%;
         padding: 10px;
+    }
+    .logo {
+        margin-left: 30px;
     }
 
     input,
