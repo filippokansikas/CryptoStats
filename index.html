@@ -42,89 +42,149 @@
 
         /* Table container styles */
         .table-container {
-            width: 100%;
-            overflow-x: auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
             margin: 0 auto;
-            padding: 0 0.5rem;
+            max-width: 1400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         /* Table styles */
         #cryptoTable {
             width: 100% !important;
             margin: 0 auto;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
-        #cryptoTable th,
-        #cryptoTable td {
-            padding: 0.4rem 0.3rem;
-            white-space: nowrap;
+        #cryptoTable thead th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 1rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
         }
 
-        /* Column width adjustments */
-        #cryptoTable th:nth-child(1), /* Symbol */
-        #cryptoTable td:nth-child(1) {
-            min-width: 60px;
-            max-width: 80px;
+        #cryptoTable tbody td {
+            padding: 1rem;
+            color: #2c3e50;
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.2s ease;
         }
 
-        #cryptoTable th:nth-child(2), /* Price */
-        #cryptoTable td:nth-child(2) {
-            min-width: 80px;
-            max-width: 100px;
-        }
-
-        #cryptoTable th:nth-child(4), /* Change */
-        #cryptoTable td:nth-child(4) {
-            min-width: 70px;
-            max-width: 90px;
-        }
-
-        /* Clickable row styles */
         #cryptoTable tbody tr {
-            cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         #cryptoTable tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.05) !important;
+            background-color: #f8f9fa;
         }
 
-        #cryptoTable tbody tr:active {
-            background-color: rgba(0, 0, 0, 0.1) !important;
+        /* Price column styling */
+        #cryptoTable td:nth-child(2) {
+            font-weight: 600;
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+        }
+
+        /* Change column styling */
+        #cryptoTable td:nth-child(4) {
+            font-weight: 600;
+        }
+
+        .positive {
+            color: #28a745 !important;
+        }
+
+        .negative {
+            color: #dc3545 !important;
+        }
+
+        /* RSI and BB Width columns */
+        #cryptoTable td:nth-child(5),
+        #cryptoTable td:nth-child(6) {
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+        }
+
+        /* DataTables custom styling */
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border: none !important;
+            padding: 0.5rem 1rem !important;
+            margin: 0 2px !important;
+            border-radius: 6px !important;
+            background: #f8f9fa !important;
+            color: #2c3e50 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #e9ecef !important;
+            color: #2c3e50 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #007bff !important;
+            color: #ffffff !important;
+        }
+
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_length {
+            color: #6c757d;
+            padding: 1rem 0;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.3rem 1.5rem 0.3rem 0.5rem;
+            margin: 0 0.5rem;
+        }
+
+        @media screen and (max-width: 768px) {
+            .table-container {
+                padding: 1rem;
+                margin: 0 1rem;
+            }
+
+            #cryptoTable th:nth-child(3),
+            #cryptoTable td:nth-child(3),
+            #cryptoTable th:nth-child(5),
+            #cryptoTable td:nth-child(5),
+            #cryptoTable th:nth-child(6),
+            #cryptoTable td:nth-child(6) {
+                display: none !important;
+            }
         }
 
         @media screen and (max-width: 480px) {
             .table-container {
-                padding: 0 0.2rem;
+                padding: 0.5rem;
+                margin: 0 0.5rem;
             }
 
             #cryptoTable {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
 
-            #cryptoTable th,
-            #cryptoTable td {
-                padding: 0.3rem 0.2rem;
-            }
-
-            /* Even more compact column widths for mobile */
-            #cryptoTable th:nth-child(1),
-            #cryptoTable td:nth-child(1) {
-                min-width: 50px;
-                max-width: 60px;
-            }
-
-            #cryptoTable th:nth-child(2),
-            #cryptoTable td:nth-child(2) {
-                min-width: 70px;
-                max-width: 85px;
-            }
-
-            #cryptoTable th:nth-child(4),
-            #cryptoTable td:nth-child(4) {
-                min-width: 60px;
-                max-width: 75px;
+            #cryptoTable thead th,
+            #cryptoTable tbody td {
+                padding: 0.75rem 0.5rem;
             }
         }
 
