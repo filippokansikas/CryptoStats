@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPM Analysis Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metric-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .beta-positive { color: #28a745; }
+        .beta-negative { color: #dc3545; }
+
+        .scatter-plot {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .analysis-table th,
+        .analysis-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .analysis-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .analysis-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .analysis-table th {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
+        
+        .analysis-table th:hover {
+            background-color: #e9ecef;
+        }
+        
+        .analysis-table th.sort-asc::after {
+            content: ' ▲';
+            position: absolute;
+            right: 5px;
+            color: #666;
+        }
+        
+        .analysis-table th.sort-desc::after {
+            content: ' ▼';
+            position: absolute;
+            right: 5px;
+            color: #666;
+        }
+        
+        .ticker-link {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .ticker-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">Trading Dashboard</a>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
+            <li><a href="capm-analysis.html">CAPM Analysis</a></li>
+        </ul>
+    </header>
+
+    <div class="container">
+        <h1>CAPM Analysis Dashboard</h1>
+        <p>Analyzing cryptocurrency returns relative to Bitcoin (Market Portfolio)</p>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Risk-Free Rate (Annual)</h3>
+                <div class="metric-value">2.5%</div>
+            </div>
+            <div class="metric-card">
+                <h3>Market Return (BTC)</h3>
+                <div class="metric-value" id="market-return">Loading...</div>
+            </div>
+            <div class="metric-card">
+                <h3>Market Risk Premium</h3>
+                <div class="metric-value" id="market-premium">Loading...</div>
+            </div>
+        </div>
+
+        <div id="scatter-plot" class="scatter-plot"></div>
+
+        <table class="analysis-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Beta</th>
+                    <th>Expected Return</th>
+                    <th>Actual Return</th>
+                    <th>Alpha</th>
+                    <th>Volatility</th>
+                </tr>
+            </thead>
+            <tbody id="analysis-results">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Constants
+        const RISK_FREE_RATE = 0.025; // 2.5% annual risk-free rate
+        const LOOKBACK_PERIOD = 365; // Changed to 365 days of historical data
+        const TOP_ASSETS = 100; // Changed to 100 assets
+
+        // State Management
+        const state = {
+            marketData: null,
+            assetData: {},
+            analysisResults: [],
+            sortConfig: {
+                column: 'volume',
+                direction: 'desc'
+            }
+        };
+
+        // API Functions
+        async function fetchHistoricalData(symbol, interval = "1d", limit = LOOKBACK_PERIOD) {
+            try {
+                // For longer periods, we need to make multiple requests
+                let allData = [];
+                let startTime = Date.now() - (LOOKBACK_PERIOD * 24 * 60 * 60 * 1000);
+                const endTime = Date.now();
+                
+                while (startTime < endTime) {
+                    const response = await fetch(
+                        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&limit=1000`
+                    );
+                    
+                    if (!response.ok) throw new Error(`Failed to fetch data for ${symbol}`);
+                    
+                    const data = await response.json();
+                    if (data.length === 0) break;
+                    
+                    allData = allData.concat(data);
+                    
+                    // Update startTime for next batch
+                    startTime = data[data.length - 1][0] + 1;
+                    
+                    // Add delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                return allData.map(k => ({
+                    date: new Date(k[0]),
+                    close: parseFloat(k[4])
+                }));
+            } catch (error) {
+                console.error(`Error fetching data for ${symbol}:`, error);
+                return null;
+            }
+        }
+
+        async function fetchTopAssets() {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                if (!response.ok) throw new Error('Failed to fetch top assets');
+                
+                const data = await response.json();
+                return data
+                    .filter(item => item.symbol.endsWith('USDT'))
+                    .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                    .slice(0, TOP_ASSETS)
+                    .map(item => item.symbol);
+            } catch (error) {
+                console.error('Error fetching top assets:', error);
+                return [];
+            }
+        }
+
+        // Analysis Functions
+        function calculateReturns(prices) {
+            const returns = [];
+            for (let i = 1; i < prices.length; i++) {
+                const return_ = (prices[i].close - prices[i-1].close) / prices[i-1].close;
+                returns.push(return_);
+            }
+            return returns;
+        }
+
+        function calculateAnnualReturn(dailyReturns) {
+            // Calculate the geometric mean of daily returns
+            const product = dailyReturns.reduce((acc, ret) => acc * (1 + ret), 1);
+            // Convert to annual return
+            return Math.pow(product, 252 / dailyReturns.length) - 1;
+        }
+
+        function calculateAnnualVolatility(dailyReturns) {
+            const mean = dailyReturns.reduce((a, b) => a + b) / dailyReturns.length;
+            const variance = dailyReturns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / dailyReturns.length;
+            return Math.sqrt(variance * 252); // Annualize volatility
+        }
+
+        function calculateBeta(assetReturns, marketReturns) {
+            const covariance = calculateCovariance(assetReturns, marketReturns);
+            const marketVariance = calculateVariance(marketReturns);
+            return covariance / marketVariance;
+        }
+
+        function calculateCovariance(array1, array2) {
+            const mean1 = array1.reduce((a, b) => a + b) / array1.length;
+            const mean2 = array2.reduce((a, b) => a + b) / array2.length;
+            
+            return array1.reduce((sum, val, i) => {
+                return sum + (val - mean1) * (array2[i] - mean2);
+            }, 0) / array1.length;
+        }
+
+        function calculateVariance(array) {
+            const mean = array.reduce((a, b) => a + b) / array.length;
+            return array.reduce((sum, val) => {
+                return sum + Math.pow(val - mean, 2);
+            }, 0) / array.length;
+        }
+
+        function calculateExpectedReturn(beta) {
+            return RISK_FREE_RATE + beta * (state.marketData.expectedReturn - RISK_FREE_RATE);
+        }
+
+        function calculateAlpha(actualReturn, expectedReturn) {
+            return actualReturn - expectedReturn;
+        }
+
+        function calculateVolatility(returns) {
+            return Math.sqrt(calculateVariance(returns)) * Math.sqrt(252); // Annualized
+        }
+
+        // UI Functions
+        function updateMetrics() {
+            const marketReturn = state.marketData.expectedReturn;
+            const marketPremium = marketReturn - RISK_FREE_RATE;
+            
+            document.getElementById('market-return').textContent = 
+                `${(marketReturn * 100).toFixed(2)}%`;
+            document.getElementById('market-premium').textContent = 
+                `${(marketPremium * 100).toFixed(2)}%`;
+        }
+
+        function createScatterPlot() {
+            try {
+                if (!state.analysisResults || state.analysisResults.length === 0) {
+                    throw new Error('No data available for plotting');
+                }
+
+                const trace = {
+                    x: state.analysisResults.map(r => r.beta),
+                    y: state.analysisResults.map(r => r.actualReturn),
+                    mode: 'markers+text',
+                    type: 'scatter',
+                    text: state.analysisResults.map(r => r.asset),
+                    textposition: 'top center',
+                    marker: {
+                        size: 12,
+                        color: state.analysisResults.map(r => r.beta > 1 ? '#28a745' : '#dc3545'),
+                        line: {
+                            width: 1,
+                            color: '#000'
+                        }
+                    },
+                    hoverinfo: 'text',
+                    hovertext: state.analysisResults.map(r => 
+                        `${r.asset}<br>` +
+                        `Beta: ${r.beta.toFixed(2)}<br>` +
+                        `Actual Return: ${(r.actualReturn * 100).toFixed(2)}%<br>` +
+                        `Expected Return: ${(r.expectedReturn * 100).toFixed(2)}%<br>` +
+                        `Alpha: ${(r.alpha * 100).toFixed(2)}%<br>` +
+                        `Volatility: ${(r.volatility * 100).toFixed(2)}%`
+                    )
+                };
+
+                // Add Security Market Line
+                const maxBeta = Math.max(...state.analysisResults.map(r => r.beta));
+                const smlTrace = {
+                    x: [0, maxBeta * 1.2], // Extend line slightly beyond max beta
+                    y: [
+                        RISK_FREE_RATE,
+                        RISK_FREE_RATE + maxBeta * 1.2 * (state.marketData.expectedReturn - RISK_FREE_RATE)
+                    ],
+                    mode: 'lines',
+                    type: 'scatter',
+                    name: 'Security Market Line',
+                    line: {
+                        color: '#007bff',
+                        dash: 'dash',
+                        width: 2
+                    }
+                };
+
+                const layout = {
+                    title: {
+                        text: 'Security Market Line (365 Days)',
+                        font: {
+                            size: 20
+                        }
+                    },
+                    xaxis: { 
+                        title: 'Beta',
+                        zeroline: true,
+                        zerolinecolor: '#666',
+                        zerolinewidth: 1,
+                        gridcolor: '#ddd',
+                        showgrid: true,
+                        range: [-0.5, maxBeta * 1.2] // Set initial range
+                    },
+                    yaxis: { 
+                        title: 'Return',
+                        zeroline: true,
+                        zerolinecolor: '#666',
+                        zerolinewidth: 1,
+                        gridcolor: '#ddd',
+                        showgrid: true,
+                        tickformat: '.1%' // Format as percentage
+                    },
+                    showlegend: true,
+                    legend: {
+                        x: 0,
+                        y: 1,
+                        bgcolor: 'rgba(255, 255, 255, 0.8)'
+                    },
+                    hovermode: 'closest',
+                    plot_bgcolor: '#fff',
+                    paper_bgcolor: '#fff',
+                    margin: {
+                        l: 50,
+                        r: 50,
+                        t: 80,
+                        b: 50
+                    }
+                };
+
+                const config = {
+                    responsive: true,
+                    scrollZoom: true,
+                    displayModeBar: true,
+                    modeBarButtonsToAdd: [
+                        'zoom2d',
+                        'pan2d',
+                        'zoomIn2d',
+                        'zoomOut2d',
+                        'resetScale2d',
+                        'hovercompare',
+                        'hoverclosest'
+                    ],
+                    displaylogo: false
+                };
+
+                Plotly.newPlot('scatter-plot', [trace, smlTrace], layout, config);
+
+                // Add click handler for points
+                document.getElementById('scatter-plot').on('plotly_click', function(data) {
+                    const point = data.points[0];
+                    const asset = state.analysisResults[point.pointNumber];
+                    if (asset) {
+                        // Highlight the corresponding row in the table
+                        const rows = document.querySelectorAll('#analysis-results tr');
+                        rows.forEach(row => row.style.backgroundColor = '');
+                        rows[point.pointNumber].style.backgroundColor = '#f0f0f0';
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error creating scatter plot:', error);
+                document.getElementById('scatter-plot').innerHTML = 
+                    `<div style="color: red; text-align: center; padding: 20px;">Error creating plot: ${error.message}</div>`;
+            }
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('analysis-results');
+            tbody.innerHTML = '';
+
+            // Sort results based on current sort configuration
+            const sortedResults = [...state.analysisResults].sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(state.sortConfig.column) {
+                    case 'asset':
+                        aValue = a.asset;
+                        bValue = b.asset;
+                        break;
+                    case 'beta':
+                        aValue = a.beta;
+                        bValue = b.beta;
+                        break;
+                    case 'expectedReturn':
+                        aValue = a.expectedReturn;
+                        bValue = b.expectedReturn;
+                        break;
+                    case 'actualReturn':
+                        aValue = a.actualReturn;
+                        bValue = b.actualReturn;
+                        break;
+                    case 'alpha':
+                        aValue = a.alpha;
+                        bValue = b.alpha;
+                        break;
+                    case 'volatility':
+                        aValue = a.volatility;
+                        bValue = b.volatility;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (state.sortConfig.direction === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+
+            sortedResults.forEach(result => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="chart.html?symbol=${result.asset}" class="ticker-link">${result.asset}</a></td>
+                    <td class="${result.beta > 1 ? 'beta-positive' : 'beta-negative'}" data-sort="${result.beta}">${result.beta.toFixed(2)}</td>
+                    <td data-sort="${result.expectedReturn}">${(result.expectedReturn * 100).toFixed(2)}%</td>
+                    <td data-sort="${result.actualReturn}">${(result.actualReturn * 100).toFixed(2)}%</td>
+                    <td class="${result.alpha > 0 ? 'beta-positive' : 'beta-negative'}" data-sort="${result.alpha}">${(result.alpha * 100).toFixed(2)}%</td>
+                    <td data-sort="${result.volatility}">${(result.volatility * 100).toFixed(2)}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Update sort indicators
+            const headers = document.querySelectorAll('.analysis-table th');
+            headers.forEach((header, index) => {
+                const column = ['asset', 'beta', 'expectedReturn', 'actualReturn', 'alpha', 'volatility'][index];
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (column === state.sortConfig.column) {
+                    header.classList.add(`sort-${state.sortConfig.direction}`);
+                }
+            });
+        }
+
+        // Add sorting functionality
+        function initializeSorting() {
+            const headers = document.querySelectorAll('.analysis-table th');
+            headers.forEach((header, index) => {
+                const column = ['asset', 'beta', 'expectedReturn', 'actualReturn', 'alpha', 'volatility'][index];
+                
+                header.addEventListener('click', () => {
+                    if (state.sortConfig.column === column) {
+                        // Toggle direction if clicking the same column
+                        state.sortConfig.direction = state.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // Set new column and default to descending
+                        state.sortConfig.column = column;
+                        state.sortConfig.direction = 'desc';
+                    }
+                    updateTable();
+                });
+            });
+        }
+
+        // Main Analysis Function
+        async function performAnalysis() {
+            try {
+                console.log('Starting CAPM analysis...');
+                
+                // Fetch market data (BTC)
+                console.log('Fetching BTC data...');
+                const btcData = await fetchHistoricalData('BTCUSDT');
+                if (!btcData || btcData.length < 2) {
+                    throw new Error('Insufficient BTC data');
+                }
+                console.log('BTC data fetched successfully');
+
+                const btcReturns = calculateReturns(btcData);
+                if (btcReturns.length < 2) {
+                    throw new Error('Failed to calculate BTC returns');
+                }
+
+                // Calculate annual market return and volatility
+                const btcAnnualReturn = calculateAnnualReturn(btcReturns);
+                const btcAnnualVolatility = calculateAnnualVolatility(btcReturns);
+
+                state.marketData = {
+                    returns: btcReturns,
+                    expectedReturn: btcAnnualReturn,
+                    volatility: btcAnnualVolatility
+                };
+
+                console.log('Market data calculated:', {
+                    expectedReturn: btcAnnualReturn,
+                    volatility: btcAnnualVolatility
+                });
+
+                // Fetch and analyze top assets
+                console.log('Fetching top assets...');
+                const topAssets = await fetchTopAssets();
+                if (!topAssets || topAssets.length === 0) {
+                    throw new Error('Failed to fetch top assets');
+                }
+                console.log('Top assets fetched:', topAssets);
+
+                state.analysisResults = [];
+
+                // Process assets sequentially to avoid rate limiting
+                for (const asset of topAssets) {
+                    try {
+                        console.log(`Processing ${asset}...`);
+                        const assetData = await fetchHistoricalData(asset);
+                        if (!assetData || assetData.length < 2) {
+                            console.warn(`Skipping ${asset}: insufficient data`);
+                            continue;
+                        }
+
+                        const assetReturns = calculateReturns(assetData);
+                        if (assetReturns.length < 2) {
+                            console.warn(`Skipping ${asset}: failed to calculate returns`);
+                            continue;
+                        }
+
+                        const beta = calculateBeta(assetReturns, btcReturns);
+                        if (isNaN(beta) || !isFinite(beta)) {
+                            console.warn(`Skipping ${asset}: invalid beta calculation`);
+                            continue;
+                        }
+
+                        const expectedReturn = calculateExpectedReturn(beta);
+                        const actualReturn = calculateAnnualReturn(assetReturns);
+                        const alpha = calculateAlpha(actualReturn, expectedReturn);
+                        const volatility = calculateAnnualVolatility(assetReturns);
+
+                        state.analysisResults.push({
+                            asset,
+                            beta,
+                            expectedReturn,
+                            actualReturn,
+                            alpha,
+                            volatility
+                        });
+
+                        console.log(`Successfully processed ${asset}`);
+                    } catch (error) {
+                        console.error(`Error processing ${asset}:`, error);
+                        continue;
+                    }
+
+                    // Add delay between API calls to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                if (state.analysisResults.length === 0) {
+                    throw new Error('No valid results to display');
+                }
+
+                // Sort results by beta for better visualization
+                state.analysisResults.sort((a, b) => a.beta - b.beta);
+
+                // Update UI
+                updateMetrics();
+                createScatterPlot();
+                updateTable();
+
+                console.log('Analysis completed successfully');
+
+            } catch (error) {
+                console.error('Error performing analysis:', error);
+                const errorMessage = `Error: ${error.message}. Please try again later.`;
+                document.getElementById('market-return').textContent = errorMessage;
+                document.getElementById('market-premium').textContent = 'N/A';
+                document.getElementById('scatter-plot').innerHTML = `<div style="color: red; text-align: center; padding: 20px;">${errorMessage}</div>`;
+                document.getElementById('analysis-results').innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">${errorMessage}</td></tr>`;
+            }
+        }
+
+        // Event Listeners
+        function initializeEventListeners() {
+            const hamburger = document.querySelector('.hamburger');
+            const nav = document.querySelector('.nav-links');
+
+            hamburger.addEventListener('click', () => {
+                nav.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            });
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    nav.classList.remove('active');
+                    hamburger.classList.remove('active');
+                });
+            });
+        }
+
+        // Initialize
+        function initialize() {
+            initializeEventListeners();
+            initializeSorting();
+            performAnalysis();
+            // Refresh analysis every hour
+            setInterval(performAnalysis, 60 * 60 * 1000);
+        }
+
+        // Start the application
+        initialize();
+    </script>
+</body>
+</html> 

@@ -7,9 +7,10 @@ const PORT = 3000;
 
 // Enable CORS so frontend can access this server
 app.use(cors());
+app.use(express.json());
 
 const API_URL = 'https://api.coinmarketcal.com/v1/events';
-const API_KEY = 'tqgkGSmnoz8bLVh5yTikE7FSAyJ5pDwx3eiMuzYU'; // Replace with your real API key
+const API_KEY = 'tqgkGSmnoz8bLVh5yTikE7FSAyJ5pDwx3eiMuzYU';
 
 app.get('/api/events', async (req, res) => {
     try {
@@ -19,14 +20,14 @@ app.get('/api/events', async (req, res) => {
             headers: {
                 'Accept': 'application/json',
                 'x-api-key': API_KEY,
-                'Accept-Encoding': 'deflate, gzip' // Added Accept-Encoding
+                'Accept-Encoding': 'deflate, gzip'
             },
-            decompress: true // Ensures axios properly handles gzip/deflate responses
+            decompress: true
         });
 
-        console.log("API Response:", response.data); // Log response data
+        console.log("API Response:", response.data);
 
-        res.json(response.data); // Send data to frontend
+        res.json(response.data);
     } catch (error) {
         console.error("Error fetching events:", error.response ? error.response.data : error.message);
         

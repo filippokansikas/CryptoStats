@@ -10,10 +10,10 @@ body {
     flex-direction: column;
     min-height: 100vh;
     background-color: #f5f5f5;
-    padding-top: 50px; /* Reduced from 70px */
+    padding-top: 50px;
 }
 
-/* Fixed Header */
+/* Header and Navigation */
 .header {
     background-color: #333;
     color: white;
@@ -25,27 +25,25 @@ body {
     top: 0;
     width: 100%;
     z-index: 1000;
-    height: 50px; /* Reduced from 70px */
+    height: 50px;
 }
 
-/* Logo */
 .header .logo {
-    font-size: 16px; /* Reduced from 20px */
+    font-size: 16px;
     font-weight: bold;
-    margin-right: 30px; /* Reduced from 50px */
+    margin-right: 30px;
 }
 
-/* Navigation */
 .nav-links {
     list-style: none;
     display: none;
     flex-direction: column;
     position: fixed;
-    top: 50px; /* Adjusted to match new header height */
+    top: 50px;
     left: 0;
     width: 100%;
     background-color: #333;
-    padding: 10px 0; /* Reduced from 20px */
+    padding: 10px 0;
     margin: 0;
     transition: 0.3s;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -57,7 +55,7 @@ body {
 }
 
 .nav-links li {
-    margin: 5px 0; /* Reduced from 10px */
+    margin: 5px 0;
     width: 100%;
     text-align: center;
     display: flex;
@@ -67,8 +65,8 @@ body {
 .nav-links a {
     color: white;
     text-decoration: none;
-    font-size: 14px; /* Reduced from 16px */
-    padding: 8px 15px; /* Reduced from 12px 20px */
+    font-size: 14px;
+    padding: 8px 15px;
     width: 100%;
     max-width: 200px;
     text-align: center;
@@ -79,25 +77,23 @@ body {
     background-color: #555;
     border-radius: 5px;
 }
-.logo{
-  margin-left: 20px;
-}
+
 /* Hamburger Menu */
 .hamburger {
     display: block;
     cursor: pointer;
-    margin-right: 20px; /* Reduced from 30px */
-    padding: 3px; /* Reduced from 5px */
+    margin-right: 20px;
+    padding: 3px;
     position: absolute;
-    right: 15px; /* Reduced from 20px */
+    right: 15px;
 }
 
 .hamburger span {
     display: block;
-    width: 20px; /* Reduced from 25px */
-    height: 2px; /* Reduced from 3px */
+    width: 20px;
+    height: 2px;
     background-color: white;
-    margin: 4px 0; /* Reduced from 5px */
+    margin: 4px 0;
     transition: 0.3s;
 }
 
@@ -113,7 +109,7 @@ body {
     transform: rotate(-45deg) translate(5px, -5px);
 }
 
-/* Container for Content */
+/* Container and Layout */
 .container {
     width: 100%;
     max-width: 800px;
@@ -122,31 +118,16 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin-top: 60px; /* Reduced from 80px */
+    margin-top: 60px;
 }
 
-/* TradingView Widget */
-#tradingview-widget-container {
-    width: 100%;
-    height: 600px;
-    margin-top: 20px;
-}
-
-/* Input Section */
-.input-section {
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-}
-
-input {
-    padding: 10px;
-    width: 100%;
-    max-width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+/* Form Elements */
+input[type="text"],
+input[type="date"] {
+    padding: 0.5rem;
+    width: 220px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 button {
@@ -164,68 +145,119 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* Comparison Results */
-#comparison-results {
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* Correlation Matrix */
-#correlation-matrix {
-    margin-top: 20px;
-    overflow-x: auto;
-}
-
-/* Table Styles */
-#cryptoTable {
+/* Tables */
+table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 40px; /* Increased from 20px to 40px */
-    overflow-x: auto;
+    margin-top: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#cryptoTable th, #cryptoTable td {
+th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
 
-#cryptoTable th {
+th {
     background-color: #f8f9fa;
     font-weight: bold;
-}
-
-#cryptoTable tr:hover {
-    background-color: #f5f5f5;
     cursor: pointer;
 }
 
-/* Make symbol and price columns sticky */
-#cryptoTable th:first-child,
-#cryptoTable td:first-child,
-#cryptoTable th:nth-child(2),
-#cryptoTable td:nth-child(2) {
-    position: sticky;
-    background-color: #f8f9fa;
-    z-index: 1;
-}
-
-/* Position the sticky columns */
-#cryptoTable th:first-child,
-#cryptoTable td:first-child {
-    left: 0;
-}
-
-#cryptoTable th:nth-child(2),
-#cryptoTable td:nth-child(2) {
-    left: 100px; /* Adjust based on symbol column width */
-}
-
-/* Hover effects for sticky columns */
-#cryptoTable tr:hover td:first-child,
-#cryptoTable tr:hover td:nth-child(2) {
+tr:hover {
     background-color: #f5f5f5;
 }
+
+/* Pivot Points Specific */
+.pivot-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.pivot-levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.level {
+    padding: 10px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+.level strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.level span {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.resistance { color: #dc3545; }
+.support { color: #28a745; }
+.pivot { color: #007bff; }
+
+/* Status Messages */
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.error-message {
+    color: #dc3545;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8d7da;
+    border-radius: 4px;
+    display: none;
+}
+
+/* Chart Containers */
+.chart-container {
+    width: 100%;
+    height: 500px;
+    margin: 20px 0;
+}
+
+#tradingview-widget-container {
+    width: 100%;
+    height: 600px;
+    margin-top: 20px;
+}
+
+/* Divergence Table Specific */
+.divergence-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.divergence-table th, 
+.divergence-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.divergence-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Divergence Type Colors */
+.bullish { color: #28a745; }
+.bearish { color: #dc3545; }
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -242,107 +274,69 @@ button:hover {
         display: block;
         position: absolute;
         right: 20px;
-       
     }
 
     .nav-links {
         position: fixed;
         top: 70px;
-        left: 0;
-        width: 100%;
-        background-color: #333;
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px 0;
-        transition: 0.3s;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        z-index: 999;
-    }
-
-    .nav-links.active {
-        display: flex;
-    }
-
-    .nav-links li {
-        margin: 10px 0;
-        width: 100%;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-    }
-
-    .nav-links a {
-        display: block;
-        width: 100%;
-        max-width: 200px;
-        padding: 12px 20px;
-        text-align: center;
-    }
-
-    .hamburger.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .hamburger.active span:nth-child(2) {
-        opacity: 0;
-    }
-
-    .hamburger.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(5px, -5px);
     }
 
     .container {
-        width: 90%;
-        padding: 15px;
+        width: 95%;
+        margin: 60px auto 20px;
     }
 
     input,
     button {
         width: 100%;
-    }
-
-    /* Hide volume, RSI, and BB Width columns on mobile */
-    #cryptoTable th:nth-child(3),
-    #cryptoTable td:nth-child(3),
-    #cryptoTable th:nth-child(5),
-    #cryptoTable td:nth-child(5),
-    #cryptoTable th:nth-child(6),
-    #cryptoTable td:nth-child(6) {
-        display: none;
-    }
-
-    /* Adjust sticky column positions for mobile */
-    #cryptoTable th:nth-child(2),
-    #cryptoTable td:nth-child(2) {
-        left: 80px; /* Adjust based on symbol column width for mobile */
+        max-width: none;
     }
 }
 
 @media (max-width: 480px) {
     .header .logo {
-        font-size: 18px;
-        margin-right: 45px;
+        font-size: 14px;
     }
 
     .container {
-        width: 95%;
         padding: 10px;
     }
+
     .logo {
-        margin-left: 30px;
+        margin-left: 10px;
     }
 
     input,
     button {
         font-size: 14px;
-        padding: 8px;
     }
+}
 
-    /* Adjust sticky column positions for very small screens */
-    #cryptoTable th:nth-child(2),
-    #cryptoTable td:nth-child(2) {
-        left: 70px; /* Further adjust for very small screens */
+/* Responsive table styles */
+@media screen and (max-width: 768px) {
+    #cryptoTable th:nth-child(3), /* Volume column */
+    #cryptoTable td:nth-child(3),
+    #cryptoTable th:nth-child(6), /* BB Width column */
+    #cryptoTable td:nth-child(6) {
+        display: none;
     }
+}
+
+@media screen and (max-width: 480px) {
+    #cryptoTable th:nth-child(5), /* RSI column */
+    #cryptoTable td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Logo link styles */
+.logo {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.logo:hover {
+    opacity: 0.8;
 }

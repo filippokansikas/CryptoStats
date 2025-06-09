@@ -29,80 +29,6 @@ function calculateCorrelation(arr1, arr2) {
     return ss.sampleCorrelation(arr1, arr2);
 }
 
-// Perform OLS regression to find residuals (for cointegration check)
-function olsRegression(seriesX, seriesY) {
-    const xMean = ss.mean(seriesX);
-    const yMean = ss.mean(seriesY);
-    const covariance = ss.sampleCovariance(seriesX, seriesY);
-    const varianceX = ss.sampleVariance(seriesX);
-
-    const beta = covariance / varianceX;
-    const alpha = yMean - beta * xMean;
-
-    // Compute residuals
-    const residuals = seriesX.map((x, i) => seriesY[i] - (alpha + beta * x));
-    return { residuals, beta };
-}
-
-// Approximate ADF test for cointegration
-function adfTest(series, threshold = 0.05) {
-    if (series.length < 2) return false;
-
-    const firstDifferences = series.slice(1).map((val, i) => val - series[i]);
-    const varianceOriginal = ss.sampleVariance(series);
-    const varianceDiffs = ss.sampleVariance(firstDifferences);
-
-    return varianceDiffs < varianceOriginal * threshold;
-}
-
-// Check cointegration using Engle-Granger method
-function checkCointegration(seriesX, seriesY) {
-    if (seriesX.length !== seriesY.length || seriesX.length === 0) return false;
-
-    const { residuals } = olsRegression(seriesX, seriesY);
-    return adfTest(residuals, 0.05);
-}
-
-// Compare URL Token with User-Selected Token
-async function compareTokens() {
-    const primaryTicker = getQueryParameter("symbol") || "BTCUSDT";
-    const userInput = document.getElementById("second-pair-input").value.trim().toUpperCase();
-    const comparisonResults = document.getElementById("comparison-results");
-
-    if (!userInput || !userInput.endsWith("USDT")) {
-        comparisonResults.innerHTML = "<p>Please enter a valid USDT pair (e.g., ETHUSDT).</p>";
-        return;
-    }
-
-    console.log(`Comparing ${primaryTicker} with ${userInput}...`);
-
-    // Fetch historical data
-    const primaryPrices = await fetchHistoricalData(primaryTicker, "4h", 2000);
-    const userPrices = await fetchHistoricalData(userInput, "4h", 2000);
-
-    if (primaryPrices.length === 0 || userPrices.length === 0) {
-        comparisonResults.innerHTML = `<p>Failed to fetch price data.</p>`;
-        return;
-    }
-
-    // Ensure same length
-    const minLength = Math.min(primaryPrices.length, userPrices.length);
-    const primaryTrimmed = primaryPrices.slice(-minLength);
-    const userTrimmed = userPrices.slice(-minLength);
-
-    // Calculate log returns
-    const primaryLogReturns = calculateLogReturns(primaryTrimmed);
-    const userLogReturns = calculateLogReturns(userTrimmed);
-
-    // Calculate correlation
-    const correlation = calculateCorrelation(primaryLogReturns, userLogReturns);
-
-    // Display results
-    comparisonResults.innerHTML = `
-        <p><strong>Correlation:</strong> ${correlation !== null ? correlation.toFixed(2) : "N/A"}</p>
-    `;
-}
-
 // Generate correlation matrix for multiple pairs
 async function generateCorrelationMatrix(primaryTicker) {
     const tickers = [primaryTicker, "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT"];
@@ -143,5 +69,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     await generateCorrelationMatrix(primaryTicker);
 });
 
-// Attach event listener to the compare button
-document.getElementById("compare-pairs-btn").addEventListener("click", compareTokens);
+// Analyze chart data
+function analyzeChartData(data) {
+    // Calculate basic statistics
+    const returns = calculateReturns(data);
+    const mean = calculateMean(returns);
+    const std = calculateStd(returns);
+    const currentZScore = (returns[returns.length - 1] - mean) / std;
+
+    // Create results HTML
+    const resultsHtml = `
+        <div class="chart-analysis-results">
+            <h3>Chart Analysis Results</h3>
+            <p><strong>Mean Return:</strong> ${mean.toFixed(4)}</p>
+            <p><strong>Return Std:</strong> ${std.toFixed(4)}</p>
+            <p><strong>Current Z-Score:</strong> ${currentZScore.toFixed(4)}</p>
+            <p><strong>Signal:</strong> ${currentZScore > 2 ? "Overbought" : currentZScore < -2 ? "Oversold" : "Neutral"}</p>
+        </div>
+    `;
+
+    return resultsHtml;
+}

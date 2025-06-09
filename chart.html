@@ -10,7 +10,7 @@
 
     <!-- Header Menu -->
     <header class="header">
-        <div class="logo">Trading Dashboard</div>
+        <a href="index.html" class="logo">Trading Dashboard</a>
         <div class="hamburger">
             <span></span>
             <span></span>
@@ -19,10 +19,7 @@
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
-            <li><a href="volume-analysis.html">Volume Analysis</a></li>
-            <li><a href="seasonality.html">Seasonality</a></li>
-            <li><a href="pivot-points.html">Pivot Points</a></li>
-            <li><a href="rsi-divergence.html">RSI Divergence</a></li>
+            <li><a href="capm-analysis.html">CAPM Analysis</a></li>
         </ul>
     </header>
 
@@ -30,26 +27,411 @@
         <div id="tradingview-widget-container"></div>
         <h1 id="chart-title">Dashboard</h1>
         
+        <!-- Add CAPM Metrics Section -->
+        <div class="capm-metrics">
+            <h2>CAPM Analysis</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Beta</h3>
+                    <div id="beta-value" class="metric-value loading">Loading...</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Expected Return</h3>
+                    <div id="expected-return" class="metric-value loading">Loading...</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Actual Return</h3>
+                    <div id="actual-return" class="metric-value loading">Loading...</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Alpha</h3>
+                    <div id="alpha-value" class="metric-value loading">Loading...</div>
+                </div>
+            </div>
+            <div id="capm-error" class="error-message" style="display: none;"></div>
+        </div>
+
+        <!-- Add RSI Divergence Section -->
+        <div class="divergence-metrics">
+            <h2>RSI Divergence Analysis</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>1 Hour</h3>
+                    <div id="1h-divergence" class="metric-value loading">Loading...</div>
+                    <div id="1h-strength" class="strength-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>4 Hours</h3>
+                    <div id="4h-divergence" class="metric-value loading">Loading...</div>
+                    <div id="4h-strength" class="strength-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>1 Day</h3>
+                    <div id="1d-divergence" class="metric-value loading">Loading...</div>
+                    <div id="1d-strength" class="strength-value"></div>
+                </div>
+            </div>
+            <div id="divergence-error" class="error-message" style="display: none;"></div>
+        </div>
+
+        <!-- Add Volume Analysis Section -->
+        <div class="volume-metrics">
+            <h2>Volume Analysis</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>24h Volume</h3>
+                    <div id="24h-volume" class="metric-value loading">Loading...</div>
+                    <div id="volume-change" class="change-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>Volume Trend</h3>
+                    <div id="volume-trend" class="metric-value loading">Loading...</div>
+                    <div id="trend-strength" class="strength-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>Volume vs Price</h3>
+                    <div id="volume-price-correlation" class="metric-value loading">Loading...</div>
+                    <div id="correlation-strength" class="strength-value"></div>
+                </div>
+            </div>
+            <div id="volume-error" class="error-message" style="display: none;"></div>
+        </div>
+
+        <!-- Add Seasonality Analysis Section -->
+        <div class="seasonality-metrics">
+            <h2>Seasonality Analysis</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Best Month</h3>
+                    <div id="best-month" class="metric-value loading">Loading...</div>
+                    <div id="best-month-return" class="return-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>Worst Month</h3>
+                    <div id="worst-month" class="metric-value loading">Loading...</div>
+                    <div id="worst-month-return" class="return-value"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>Current Month</h3>
+                    <div id="current-month" class="metric-value loading">Loading...</div>
+                    <div id="current-month-return" class="return-value"></div>
+                </div>
+            </div>
+            <div class="monthly-returns">
+                <h3>Monthly Returns</h3>
+                <div id="monthly-returns-table" class="returns-table loading">Loading...</div>
+            </div>
+            <div id="seasonality-error" class="error-message" style="display: none;"></div>
+        </div>
+
         <img src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Latest Crypto Fear & Greed Index" width="300px" />
-
-        <!-- Input for Second Pair -->
-        <div class="input-section">
-            <label for="second-pair-input">
-                <strong>Enter Second Pair:</strong>
-            </label>
-            <input type="text" id="second-pair-input" placeholder="e.g., ETHUSDT" />
-            <button id="compare-pairs-btn">Compare Pairs</button>
-        </div>
-
-        <!-- Comparison Results -->
-        <div>
-            <strong>Comparison Results:</strong>
-            <div id="comparison-results">Waiting for input...</div>
-        </div>
 
         <!-- Correlation Matrix -->
         <div id="correlation-matrix"></div>
+
+        <!-- Pivot Points Section -->
+        <div class="pivot-points">
+            <h2>Pivot Points</h2>
+            <div class="pivot-grid">
+                <div class="pivot-levels">
+                    <div class="pivot-row">
+                        <span class="pivot-label">R3</span>
+                        <span id="r3-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row">
+                        <span class="pivot-label">R2</span>
+                        <span id="r2-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row">
+                        <span class="pivot-label">R1</span>
+                        <span id="r1-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row main">
+                        <span class="pivot-label">PP</span>
+                        <span id="pp-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row">
+                        <span class="pivot-label">S1</span>
+                        <span id="s1-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row">
+                        <span class="pivot-label">S2</span>
+                        <span id="s2-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                    <div class="pivot-row">
+                        <span class="pivot-label">S3</span>
+                        <span id="s3-value" class="pivot-value loading">Loading...</span>
+                    </div>
+                </div>
+                <div class="pivot-info">
+                    <div class="info-card">
+                        <h3>Current Price</h3>
+                        <div id="current-price" class="info-value loading">Loading...</div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Daily Range</h3>
+                        <div id="daily-range" class="info-value loading">Loading...</div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Next Level</h3>
+                        <div id="next-level" class="info-value loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            <div id="pivot-error" class="error-message" style="display: none;"></div>
+        </div>
     </div>
+
+    <style>
+        .capm-metrics, .divergence-metrics, .volume-metrics {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .metric-value.loading {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .metric-value.positive {
+            color: #28a745;
+        }
+
+        .metric-value.negative {
+            color: #dc3545;
+        }
+
+        .strength-value, .change-value {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff3f3;
+            border-radius: 4px;
+        }
+
+        .bullish {
+            color: #28a745;
+        }
+
+        .bearish {
+            color: #dc3545;
+        }
+
+        .none {
+            color: #6c757d;
+        }
+
+        .monthly-returns {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .monthly-returns h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .returns-table {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            font-size: 14px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .returns-table.loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .month-cell {
+            padding: 12px;
+            text-align: center;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .month-cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .month-cell .month-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .month-cell .return-value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .month-cell.positive {
+            border-top: 3px solid #28a745;
+        }
+
+        .month-cell.negative {
+            border-top: 3px solid #dc3545;
+        }
+
+        .month-cell.positive .return-value {
+            color: #28a745;
+        }
+
+        .month-cell.negative .return-value {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .returns-table {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .returns-table {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .pivot-points {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pivot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .pivot-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pivot-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: transform 0.2s ease;
+        }
+
+        .pivot-row:hover {
+            transform: translateX(5px);
+        }
+
+        .pivot-row.main {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+
+        .pivot-label {
+            font-weight: 600;
+            color: #495057;
+            width: 40px;
+        }
+
+        .pivot-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #007bff;
+        }
+
+        .pivot-value.loading {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pivot-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #007bff;
+        }
+
+        .info-value.loading {
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .pivot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 
     <!-- TradingView Widget JS -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -74,6 +456,26 @@
                 hamburger.classList.remove('active');
             });
         });
+
+        // Add this before the existing script content
+        async function fetchHistoricalData(symbol, interval = "1h", limit = 500) {
+            try {
+                const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`API Error (${symbol}): ${response.statusText}`);
+                const data = await response.json();
+                return data.map(candle => parseFloat(candle[4])); // Extract closing prices
+            } catch (error) {
+                console.error(`Error fetching ${symbol}:`, error.message);
+                return [];
+            }
+        }
+
+        // Get the symbol from the URL
+        function getQueryParameter(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param)?.toUpperCase();
+        }
 
         // Initialize TradingView Widget
         function initializeTradingView(symbol = 'BTCUSDT') {
@@ -113,7 +515,619 @@
             const symbol = getSymbolFromUrl();
             document.getElementById('chart-title').textContent = `${symbol} Chart`;
             initializeTradingView(symbol);
+            calculateCAPMMetrics(symbol);
+            updateDivergenceMetrics(symbol);
+            updateVolumeMetrics(symbol);
+            updateSeasonalityMetrics(symbol);
+            updatePivotPoints(symbol);
         });
+
+        async function calculateCAPMMetrics(symbol) {
+            const errorDiv = document.getElementById('capm-error');
+            const metricElements = {
+                beta: document.getElementById('beta-value'),
+                expected: document.getElementById('expected-return'),
+                actual: document.getElementById('actual-return'),
+                alpha: document.getElementById('alpha-value')
+            };
+
+            // Reset states
+            errorDiv.style.display = 'none';
+            Object.values(metricElements).forEach(el => {
+                el.className = 'metric-value loading';
+                el.textContent = 'Loading...';
+            });
+
+            try {
+                // Fetch historical data for the asset and BTC
+                const [assetData, btcData] = await Promise.all([
+                    fetchHistoricalData(symbol, "1d", 365),
+                    fetchHistoricalData("BTCUSDT", "1d", 365)
+                ]);
+
+                if (!assetData.length || !btcData.length) {
+                    throw new Error("Insufficient data for CAPM calculation");
+                }
+
+                // Calculate returns
+                const assetReturns = calculateLogReturns(assetData);
+                const btcReturns = calculateLogReturns(btcData);
+
+                if (assetReturns.length < 2 || btcReturns.length < 2) {
+                    throw new Error("Not enough data points for calculation");
+                }
+
+                // Calculate beta
+                const covariance = calculateCovariance(assetReturns, btcReturns);
+                const btcVariance = calculateVariance(btcReturns);
+                const beta = covariance / btcVariance;
+
+                // Calculate returns
+                const riskFreeRate = 0.025; // 2.5% annual risk-free rate
+                const btcAnnualReturn = calculateAnnualReturn(btcReturns);
+                const expectedReturn = riskFreeRate + beta * (btcAnnualReturn - riskFreeRate);
+                const actualReturn = calculateAnnualReturn(assetReturns);
+                const alpha = actualReturn - expectedReturn;
+
+                // Update UI
+                metricElements.beta.textContent = beta.toFixed(2);
+                metricElements.expected.textContent = (expectedReturn * 100).toFixed(2) + '%';
+                metricElements.actual.textContent = (actualReturn * 100).toFixed(2) + '%';
+                metricElements.alpha.textContent = (alpha * 100).toFixed(2) + '%';
+
+                // Add color classes
+                metricElements.beta.className = 'metric-value ' + (beta > 1 ? 'positive' : 'negative');
+                metricElements.alpha.className = 'metric-value ' + (alpha > 0 ? 'positive' : 'negative');
+                metricElements.expected.className = 'metric-value';
+                metricElements.actual.className = 'metric-value';
+
+            } catch (error) {
+                console.error('Error calculating CAPM metrics:', error);
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+                
+                Object.values(metricElements).forEach(el => {
+                    el.textContent = 'Error';
+                    el.className = 'metric-value negative';
+                });
+            }
+        }
+
+        // Helper functions
+        function calculateLogReturns(prices) {
+            if (prices.length < 2) return [];
+            return prices.slice(1).map((price, i) => Math.log(price / prices[i]));
+        }
+
+        function calculateCovariance(array1, array2) {
+            const mean1 = array1.reduce((a, b) => a + b) / array1.length;
+            const mean2 = array2.reduce((a, b) => a + b) / array2.length;
+            
+            return array1.reduce((sum, val, i) => {
+                return sum + (val - mean1) * (array2[i] - mean2);
+            }, 0) / array1.length;
+        }
+
+        function calculateVariance(array) {
+            const mean = array.reduce((a, b) => a + b) / array.length;
+            return array.reduce((sum, val) => {
+                return sum + Math.pow(val - mean, 2);
+            }, 0) / array.length;
+        }
+
+        function calculateAnnualReturn(dailyReturns) {
+            const product = dailyReturns.reduce((acc, ret) => acc * (1 + ret), 1);
+            return Math.pow(product, 252 / dailyReturns.length) - 1;
+        }
+
+        // Add RSI Divergence Functions
+        async function calculateRSI(prices, period = 14) {
+            let gains = 0;
+            let losses = 0;
+            
+            // Calculate initial average gain and loss
+            for (let i = 1; i < period + 1; i++) {
+                const change = prices[i] - prices[i - 1];
+                if (change >= 0) gains += change;
+                else losses += Math.abs(change);
+            }
+            
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+            
+            // Calculate RSI values
+            const rsiValues = [];
+            for (let i = period; i < prices.length; i++) {
+                const change = prices[i] - prices[i - 1];
+                avgGain = ((avgGain * (period - 1)) + (change >= 0 ? change : 0)) / period;
+                avgLoss = ((avgLoss * (period - 1)) + (change < 0 ? Math.abs(change) : 0)) / period;
+                
+                const rs = avgGain / avgLoss;
+                const rsi = 100 - (100 / (1 + rs));
+                rsiValues.push(rsi);
+            }
+            
+            return rsiValues;
+        }
+
+        function findLocalExtremes(data) {
+            const extremes = [];
+            const windowSize = 5; // Look for extremes within a 5-point window
+            
+            for (let i = windowSize; i < data.length - windowSize; i++) {
+                let isExtreme = true;
+                const current = data[i];
+                
+                // Check if it's a maximum
+                for (let j = i - windowSize; j <= i + windowSize; j++) {
+                    if (j !== i && data[j] >= current) {
+                        isExtreme = false;
+                        break;
+                    }
+                }
+                
+                if (isExtreme) {
+                    extremes.push({ index: i, value: current, type: 'max' });
+                    continue;
+                }
+                
+                // Check if it's a minimum
+                isExtreme = true;
+                for (let j = i - windowSize; j <= i + windowSize; j++) {
+                    if (j !== i && data[j] <= current) {
+                        isExtreme = false;
+                        break;
+                    }
+                }
+                
+                if (isExtreme) {
+                    extremes.push({ index: i, value: current, type: 'min' });
+                }
+            }
+            
+            return extremes;
+        }
+
+        function detectDivergence(prices, rsiValues) {
+            if (prices.length < 40 || rsiValues.length < 40) {
+                return null;
+            }
+
+            const priceExtremes = findLocalExtremes(prices);
+            const rsiExtremes = findLocalExtremes(rsiValues);
+
+            let strongestDivergence = null;
+            let maxStrength = 0;
+
+            // Check for divergences between price and RSI extremes
+            for (let i = 0; i < priceExtremes.length - 1; i++) {
+                const priceExtreme1 = priceExtremes[i];
+                const priceExtreme2 = priceExtremes[i + 1];
+                
+                // Find corresponding RSI extremes
+                const rsiExtreme1 = rsiExtremes.find(e => 
+                    Math.abs(e.index - priceExtreme1.index) <= 2
+                );
+                const rsiExtreme2 = rsiExtremes.find(e => 
+                    Math.abs(e.index - priceExtreme2.index) <= 2
+                );
+                
+                if (!rsiExtreme1 || !rsiExtreme2) continue;
+                
+                // Calculate price and RSI changes
+                const priceChange = priceExtreme2.value - priceExtreme1.value;
+                const rsiChange = rsiExtreme2.value - rsiExtreme1.value;
+                
+                // Detect divergence
+                let type = 'none';
+                let strength = 0;
+                
+                if (priceChange > 0 && rsiChange < 0) {
+                    type = 'bearish';
+                    strength = Math.abs(rsiChange) / Math.abs(priceChange);
+                } else if (priceChange < 0 && rsiChange > 0) {
+                    type = 'bullish';
+                    strength = Math.abs(rsiChange) / Math.abs(priceChange);
+                }
+                
+                if (strength > maxStrength) {
+                    maxStrength = strength;
+                    strongestDivergence = { type, strength };
+                }
+            }
+            
+            return strongestDivergence;
+        }
+
+        async function updateDivergenceMetrics(symbol) {
+            const errorDiv = document.getElementById('divergence-error');
+            const timeframes = ['1h', '4h', '1d'];
+            
+            // Reset states
+            errorDiv.style.display = 'none';
+            timeframes.forEach(tf => {
+                document.getElementById(`${tf}-divergence`).className = 'metric-value loading';
+                document.getElementById(`${tf}-divergence`).textContent = 'Loading...';
+                document.getElementById(`${tf}-strength`).textContent = '';
+            });
+
+            try {
+                for (const timeframe of timeframes) {
+                    const response = await fetch(
+                        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=100`
+                    );
+                    if (!response.ok) throw new Error('Failed to fetch data');
+                    
+                    const data = await response.json();
+                    const closes = data.map(candle => parseFloat(candle[4]));
+                    const rsiValues = await calculateRSI(closes);
+                    
+                    const divergence = detectDivergence(closes, rsiValues);
+                    const divergenceElement = document.getElementById(`${timeframe}-divergence`);
+                    const strengthElement = document.getElementById(`${timeframe}-strength`);
+                    
+                    if (divergence) {
+                        divergenceElement.textContent = divergence.type;
+                        divergenceElement.className = `metric-value ${divergence.type}`;
+                        strengthElement.textContent = `Strength: ${divergence.strength.toFixed(2)}`;
+                    } else {
+                        divergenceElement.textContent = 'None';
+                        divergenceElement.className = 'metric-value none';
+                        strengthElement.textContent = '';
+                    }
+                }
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Add Volume Analysis Functions
+        async function updateVolumeMetrics(symbol) {
+            const errorDiv = document.getElementById('volume-error');
+            const elements = {
+                volume24h: document.getElementById('24h-volume'),
+                volumeChange: document.getElementById('volume-change'),
+                volumeTrend: document.getElementById('volume-trend'),
+                trendStrength: document.getElementById('trend-strength'),
+                volumePriceCorrelation: document.getElementById('volume-price-correlation'),
+                correlationStrength: document.getElementById('correlation-strength')
+            };
+
+            // Reset states
+            errorDiv.style.display = 'none';
+            Object.values(elements).forEach(el => {
+                if (el) {
+                    el.className = el.className.replace(' positive negative', '');
+                    if (el.classList.contains('metric-value')) {
+                        el.className = 'metric-value loading';
+                        el.textContent = 'Loading...';
+                    } else {
+                        el.textContent = '';
+                    }
+                }
+            });
+
+            try {
+                // Fetch 24h ticker data
+                const tickerResponse = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                if (!tickerResponse.ok) throw new Error('Failed to fetch ticker data');
+                const tickerData = await tickerResponse.json();
+
+                // Format and display 24h volume
+                const volume24h = parseFloat(tickerData.volume);
+                elements.volume24h.textContent = formatVolume(volume24h);
+                elements.volume24h.className = 'metric-value';
+
+                // Calculate and display volume change
+                const volumeChange = parseFloat(tickerData.volumeChange);
+                const volumeChangePercent = (volumeChange / (volume24h - volumeChange)) * 100;
+                elements.volumeChange.textContent = `${volumeChangePercent >= 0 ? '+' : ''}${volumeChangePercent.toFixed(2)}%`;
+                elements.volumeChange.className = `change-value ${volumeChangePercent >= 0 ? 'positive' : 'negative'}`;
+
+                // Fetch historical data for trend analysis
+                const klinesResponse = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=30`
+                );
+                if (!klinesResponse.ok) throw new Error('Failed to fetch historical data');
+                const klinesData = await klinesResponse.json();
+
+                // Calculate volume trend
+                const volumes = klinesData.map(k => parseFloat(k[5])); // Volume is at index 5
+                const prices = klinesData.map(k => parseFloat(k[4])); // Close price is at index 4
+                
+                // Calculate volume trend using linear regression
+                const volumeTrend = calculateTrend(volumes);
+                elements.volumeTrend.textContent = volumeTrend > 0 ? 'Increasing' : 'Decreasing';
+                elements.volumeTrend.className = `metric-value ${volumeTrend > 0 ? 'positive' : 'negative'}`;
+                elements.trendStrength.textContent = `Strength: ${Math.abs(volumeTrend).toFixed(2)}`;
+
+                // Calculate volume-price correlation
+                const correlation = calculateCorrelation(volumes, prices);
+                elements.volumePriceCorrelation.textContent = correlation > 0 ? 'Positive' : 'Negative';
+                elements.volumePriceCorrelation.className = `metric-value ${correlation > 0 ? 'positive' : 'negative'}`;
+                elements.correlationStrength.textContent = `Strength: ${Math.abs(correlation).toFixed(2)}`;
+
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function formatVolume(volume) {
+            if (volume >= 1e9) return `${(volume / 1e9).toFixed(2)}B`;
+            if (volume >= 1e6) return `${(volume / 1e6).toFixed(2)}M`;
+            if (volume >= 1e3) return `${(volume / 1e3).toFixed(2)}K`;
+            return volume.toFixed(2);
+        }
+
+        function calculateTrend(data) {
+            const n = data.length;
+            const x = Array.from({length: n}, (_, i) => i);
+            const y = data;
+            
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((a, b, i) => a + b * y[i], 0);
+            const sumXX = x.reduce((a, b) => a + b * b, 0);
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            return slope;
+        }
+
+        function calculateCorrelation(x, y) {
+            const n = x.length;
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((a, b, i) => a + b * y[i], 0);
+            const sumXX = x.reduce((a, b) => a + b * b, 0);
+            const sumYY = y.reduce((a, b) => a + b * b, 0);
+            
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+            
+            return numerator / denominator;
+        }
+
+        // Add Seasonality Analysis Functions
+        async function updateSeasonalityMetrics(symbol) {
+            const errorDiv = document.getElementById('seasonality-error');
+            const elements = {
+                bestMonth: document.getElementById('best-month'),
+                bestMonthReturn: document.getElementById('best-month-return'),
+                worstMonth: document.getElementById('worst-month'),
+                worstMonthReturn: document.getElementById('worst-month-return'),
+                currentMonth: document.getElementById('current-month'),
+                currentMonthReturn: document.getElementById('current-month-return'),
+                monthlyReturnsTable: document.getElementById('monthly-returns-table')
+            };
+
+            // Reset states
+            errorDiv.style.display = 'none';
+            Object.values(elements).forEach(el => {
+                if (el) {
+                    el.className = el.className.replace(' positive negative', '');
+                    if (el.classList.contains('metric-value') || el.classList.contains('returns-table')) {
+                        el.className = el.classList.contains('returns-table') ? 'returns-table loading' : 'metric-value loading';
+                        el.textContent = 'Loading...';
+                    } else {
+                        el.textContent = '';
+                    }
+                }
+            });
+
+            try {
+                // Fetch historical data for the last 5 years (approximately 1825 days)
+                const klinesResponse = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=1825`
+                );
+                if (!klinesResponse.ok) throw new Error('Failed to fetch historical data');
+                const klinesData = await klinesResponse.json();
+
+                // Calculate monthly returns
+                const monthlyReturns = calculateMonthlyReturns(klinesData);
+                
+                // Find best and worst months
+                const bestMonth = findBestMonth(monthlyReturns);
+                const worstMonth = findWorstMonth(monthlyReturns);
+                const currentMonth = new Date().getMonth();
+                const currentMonthReturn = monthlyReturns[currentMonth];
+
+                // Update UI with results
+                elements.bestMonth.textContent = getMonthName(bestMonth.month);
+                elements.bestMonthReturn.textContent = `+${bestMonth.return.toFixed(2)}%`;
+                elements.bestMonthReturn.className = 'return-value positive';
+                elements.bestMonth.className = 'metric-value positive';
+
+                elements.worstMonth.textContent = getMonthName(worstMonth.month);
+                elements.worstMonthReturn.textContent = `${worstMonth.return.toFixed(2)}%`;
+                elements.worstMonthReturn.className = 'return-value negative';
+                elements.worstMonth.className = 'metric-value negative';
+
+                elements.currentMonth.textContent = getMonthName(currentMonth);
+                elements.currentMonthReturn.textContent = `${currentMonthReturn >= 0 ? '+' : ''}${currentMonthReturn.toFixed(2)}%`;
+                elements.currentMonthReturn.className = `return-value ${currentMonthReturn >= 0 ? 'positive' : 'negative'}`;
+                elements.currentMonth.className = `metric-value ${currentMonthReturn >= 0 ? 'positive' : 'negative'}`;
+
+                // Update monthly returns table with the new function
+                updateMonthlyReturnsTable(monthlyReturns, elements);
+
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function calculateMonthlyReturns(klinesData) {
+            const monthlyReturns = Array(12).fill(0);
+            const monthlyCounts = Array(12).fill(0);
+            
+            // Group data by month
+            const monthlyData = {};
+            for (let i = 0; i < 12; i++) {
+                monthlyData[i] = [];
+            }
+
+            // First pass: collect all daily returns for each month
+            for (let i = 1; i < klinesData.length; i++) {
+                const date = new Date(klinesData[i][0]);
+                const month = date.getMonth();
+                const prevClose = parseFloat(klinesData[i-1][4]);
+                const currentClose = parseFloat(klinesData[i][4]);
+                const dailyReturn = ((currentClose - prevClose) / prevClose) * 100;
+                
+                monthlyData[month].push(dailyReturn);
+            }
+
+            // Second pass: calculate average returns for each month
+            for (let month = 0; month < 12; month++) {
+                const returns = monthlyData[month];
+                if (returns.length > 0) {
+                    // Calculate average return for this month
+                    const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
+                    monthlyReturns[month] = avgReturn;
+                }
+            }
+
+            return monthlyReturns;
+        }
+
+        function findBestMonth(monthlyReturns) {
+            let bestMonth = 0;
+            let bestReturn = monthlyReturns[0];
+            
+            for (let i = 1; i < monthlyReturns.length; i++) {
+                if (monthlyReturns[i] > bestReturn) {
+                    bestMonth = i;
+                    bestReturn = monthlyReturns[i];
+                }
+            }
+            
+            return { month: bestMonth, return: bestReturn };
+        }
+
+        function findWorstMonth(monthlyReturns) {
+            let worstMonth = 0;
+            let worstReturn = monthlyReturns[0];
+            
+            for (let i = 1; i < monthlyReturns.length; i++) {
+                if (monthlyReturns[i] < worstReturn) {
+                    worstMonth = i;
+                    worstReturn = monthlyReturns[i];
+                }
+            }
+            
+            return { month: worstMonth, return: worstReturn };
+        }
+
+        function getMonthName(monthIndex) {
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            return months[monthIndex];
+        }
+
+        // Update the monthly returns table creation in updateSeasonalityMetrics
+        function updateMonthlyReturnsTable(monthlyReturns, elements) {
+            elements.monthlyReturnsTable.className = 'returns-table';
+            elements.monthlyReturnsTable.innerHTML = '';
+            
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            months.forEach((month, i) => {
+                const returnValue = monthlyReturns[i];
+                const monthCell = document.createElement('div');
+                monthCell.className = `month-cell ${returnValue >= 0 ? 'positive' : 'negative'}`;
+                monthCell.innerHTML = `
+                    <div class="month-name">${month}</div>
+                    <div class="return-value">${returnValue >= 0 ? '+' : ''}${returnValue.toFixed(2)}%</div>
+                `;
+                elements.monthlyReturnsTable.appendChild(monthCell);
+            });
+        }
+
+        // Add Pivot Points Functions
+        async function updatePivotPoints(symbol) {
+            const errorDiv = document.getElementById('pivot-error');
+            const elements = {
+                r3: document.getElementById('r3-value'),
+                r2: document.getElementById('r2-value'),
+                r1: document.getElementById('r1-value'),
+                pp: document.getElementById('pp-value'),
+                s1: document.getElementById('s1-value'),
+                s2: document.getElementById('s2-value'),
+                s3: document.getElementById('s3-value'),
+                currentPrice: document.getElementById('current-price'),
+                dailyRange: document.getElementById('daily-range'),
+                nextLevel: document.getElementById('next-level')
+            };
+
+            // Reset states
+            errorDiv.style.display = 'none';
+            Object.values(elements).forEach(el => {
+                if (el) {
+                    el.className = el.className.replace(' positive negative', '');
+                    el.className = 'pivot-value loading';
+                    el.textContent = 'Loading...';
+                }
+            });
+
+            try {
+                // Fetch daily data
+                const klinesResponse = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=1`
+                );
+                if (!klinesResponse.ok) throw new Error('Failed to fetch daily data');
+                const klinesData = await klinesResponse.json();
+
+                // Get OHLC data
+                const high = parseFloat(klinesData[0][2]);
+                const low = parseFloat(klinesData[0][3]);
+                const close = parseFloat(klinesData[0][4]);
+
+                // Calculate pivot points
+                const pp = (high + low + close) / 3;
+                const r1 = 2 * pp - low;
+                const r2 = pp + (high - low);
+                const r3 = high + 2 * (pp - low);
+                const s1 = 2 * pp - high;
+                const s2 = pp - (high - low);
+                const s3 = low - 2 * (high - pp);
+
+                // Update pivot point values
+                elements.r3.textContent = r3.toFixed(2);
+                elements.r2.textContent = r2.toFixed(2);
+                elements.r1.textContent = r1.toFixed(2);
+                elements.pp.textContent = pp.toFixed(2);
+                elements.s1.textContent = s1.toFixed(2);
+                elements.s2.textContent = s2.toFixed(2);
+                elements.s3.textContent = s3.toFixed(2);
+
+                // Update current price
+                elements.currentPrice.textContent = close.toFixed(2);
+                elements.currentPrice.className = 'pivot-value';
+
+                // Calculate and update daily range
+                const dailyRange = ((high - low) / low * 100).toFixed(2);
+                elements.dailyRange.textContent = `${dailyRange}%`;
+                elements.dailyRange.className = 'pivot-value';
+
+                // Find next level
+                const levels = [r3, r2, r1, pp, s1, s2, s3].sort((a, b) => a - b);
+                const nextLevel = levels.find(level => level > close) || levels[levels.length - 1];
+                const distance = ((nextLevel - close) / close * 100).toFixed(2);
+                elements.nextLevel.textContent = `${nextLevel.toFixed(2)} (${distance}%)`;
+                elements.nextLevel.className = 'pivot-value';
+
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
     </script>
 
 </body>

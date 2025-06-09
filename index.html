@@ -8,10 +8,142 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        @media screen and (max-width: 768px) {
+            #cryptoTable th:nth-child(3), /* Volume */
+            #cryptoTable td:nth-child(3),
+            #cryptoTable th:nth-child(5), /* RSI */
+            #cryptoTable td:nth-child(5),
+            #cryptoTable th:nth-child(6), /* BB Width */
+            #cryptoTable td:nth-child(6) {
+                display: none !important;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin: 2rem 0;
+            font-size: 2rem;
+        }
+
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+                margin: 1.5rem 0;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+                margin: 1rem 0;
+            }
+        }
+
+        /* Table container styles */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 0 auto;
+            padding: 0 0.5rem;
+        }
+
+        /* Table styles */
+        #cryptoTable {
+            width: 100% !important;
+            margin: 0 auto;
+            font-size: 0.9rem;
+        }
+
+        #cryptoTable th,
+        #cryptoTable td {
+            padding: 0.4rem 0.3rem;
+            white-space: nowrap;
+        }
+
+        /* Column width adjustments */
+        #cryptoTable th:nth-child(1), /* Symbol */
+        #cryptoTable td:nth-child(1) {
+            min-width: 60px;
+            max-width: 80px;
+        }
+
+        #cryptoTable th:nth-child(2), /* Price */
+        #cryptoTable td:nth-child(2) {
+            min-width: 80px;
+            max-width: 100px;
+        }
+
+        #cryptoTable th:nth-child(4), /* Change */
+        #cryptoTable td:nth-child(4) {
+            min-width: 70px;
+            max-width: 90px;
+        }
+
+        /* Clickable row styles */
+        #cryptoTable tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #cryptoTable tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+        }
+
+        #cryptoTable tbody tr:active {
+            background-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        @media screen and (max-width: 480px) {
+            .table-container {
+                padding: 0 0.2rem;
+            }
+
+            #cryptoTable {
+                font-size: 0.8rem;
+            }
+
+            #cryptoTable th,
+            #cryptoTable td {
+                padding: 0.3rem 0.2rem;
+            }
+
+            /* Even more compact column widths for mobile */
+            #cryptoTable th:nth-child(1),
+            #cryptoTable td:nth-child(1) {
+                min-width: 50px;
+                max-width: 60px;
+            }
+
+            #cryptoTable th:nth-child(2),
+            #cryptoTable td:nth-child(2) {
+                min-width: 70px;
+                max-width: 85px;
+            }
+
+            #cryptoTable th:nth-child(4),
+            #cryptoTable td:nth-child(4) {
+                min-width: 60px;
+                max-width: 75px;
+            }
+        }
+
+        /* Logo link styles */
+        .logo {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
-        <div class="logo">Trading Dashboard</div>
+        <a href="index.html" class="logo">Trading Dashboard</a>
         <div class="hamburger">
             <span></span>
             <span></span>
@@ -20,29 +152,28 @@
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="tvlCorrelation.html">TVL Correlation</a></li>
-            <li><a href="volume-analysis.html">Volume Analysis</a></li>
-            <li><a href="seasonality.html">Seasonality</a></li>
-            <li><a href="pivot-points.html">Pivot Points</a></li>
-            <li><a href="rsi-divergence.html">RSI Divergence</a></li>
+            <li><a href="capm-analysis.html">CAPM Analysis</a></li>
         </ul>
     </header>
 
     <h1>Top 100 Cryptocurrencies Dashboard</h1>
 
-    <table id="cryptoTable" class="display">
-        <thead>
-            <tr>
-                <th>Symbol</th>
-                <th>Price (USD)</th>
-                <th>Volume (24h)</th>
-                <th>Change (24h)</th>
-                <th>RSI (14)</th>
-                <th>BB Width</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table id="cryptoTable" class="display">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Price (USD)</th>
+                    <th>Volume (24h)</th>
+                    <th>Change (24h)</th>
+                    <th>RSI (14)</th>
+                    <th>BB Width</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -66,6 +197,12 @@
                 nav.classList.remove('active');
                 hamburger.classList.remove('active');
             });
+        });
+
+        // Make rows clickable
+        $(document).on('click', '#cryptoTable tbody tr', function() {
+            const symbol = $(this).find('td:first').text();
+            window.location.href = `chart.html?symbol=${symbol}`;
         });
     </script>
 </body>
